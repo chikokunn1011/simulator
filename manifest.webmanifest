@@ -1,0 +1,17 @@
+{
+  "name": "数学・理科シミュレーター",
+  "short_name": "シミュレーター",
+  "description": "数学・理科の現象を、値を動かしながら図とグラフで確かめるシミュレーター",
+  "lang": "ja",
+  "id": "/simulator/",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fbfcfe",
+  "theme_color": "#1c1846",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
