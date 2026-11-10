@@ -27,7 +27,7 @@
   const css = document.createElement('style');
   css.textContent =
     'body[data-sim="ohm"] .stage{grid-template-rows:minmax(0,1.25fr) minmax(0,1fr)}' +
-    '@media (max-width:899px){body[data-sim="ohm"] .stage{--stage-h:clamp(290px,40vh,420px)}}' +
+    '@media (max-width:899px){body[data-sim="ohm"] .stage{--stage-h:clamp(230px,33vh,380px)}}' +
     'body[data-sim="ohm"] .ro dd small{font-size:.78em;font-weight:600;color:var(--muted);white-space:nowrap}' +
     '@media (max-width:899px) and (min-height:560px){body[data-sim="ohm"] .ro dd small{display:block;line-height:1.1}}';
   document.head.append(css);

@@ -4,8 +4,9 @@
    教材の書き方（くわしくは README.md）:
    SimApp.register({
      id: 'functions',
-     intro: '<p>…</p>',                      // STEP 1 現象を知る（HTML）
-     assumptions: ['…', '…'],                 // このモデルの約束・簡単にしたところ（STEP 1 と STEP 3 に出す）
+     intro: '<p>…</p>',                      // くわしい説明（「なぜ？」の「くわしく読む」で出る）
+     assumptions: ['…', '…'],                 // このモデルの約束・簡単にしたところ（「くわしく読む」で出る）
+     dragHint: '点を指で動かせる',              // 図を直接さわれるとき、はじめの数回だけ図の上に出す
      params: [{ key:'a', label:'傾き a', min:-5, max:5, step:0.1, value:1, unit:'', digits:1, show:(s)=>true }],
      choices: [{ key:'mode', label:'関数', options:[['lin','一次関数'],['quad','二次関数']], value:'lin' }],
      toggles: [{ key:'grid', label:'方眼', value:true }],
@@ -18,8 +19,8 @@
      resetTime(s) {},                          // 時間を 0 にもどす
      formula(s) { return 'HTML' },             // いつも見える式（図の上）
      readouts(s) { return [['ラベル','値'], …] }, // いつも見える数値（図の下）
-     explain(s) { return 'HTML' },             // STEP 3 なぜそうなる？（今の値を使って説明）
-     quiz(s) { return [{ q:'HTML', choices:['…'], answer:0, explain:'HTML', why:{ 1:'まちがえたときの説明' } }] }  // STEP 4
+     explain(s) { return 'HTML' },             // なぜ？（今の値を使って説明）。はじめは見出し・式（.eq）・今の値（.now）だけ見せ、ほかは「くわしく読む」で出る
+     quiz(s) { return [{ q:'HTML', choices:['…'], answer:0, explain:'HTML', why:{ 1:'まちがえたときの説明' } }] }  // 確認問題
    });
    状態 s は params・choices・toggles の値と、t（時間）・playing・speed を持つ。 */
 (function (root) {
@@ -126,8 +127,8 @@
     const inputs = {};
     // プリセット
     if (sim.presets.length) {
-      const g = el('div', 'group');
-      g.append(el('span', 'label', '代表的な条件'));
+      const g = el('div', 'group presets-g');
+      g.append(el('span', 'label', '例'));
       const row = el('div', 'chips presets');
       sim.presets.forEach((p) => {
         const b = el('button', 'chip', p.label);
@@ -154,18 +155,17 @@
     sim.params.forEach((p) => {
       const id = 'p-' + p.key;
       const g = el('div', 'group param');
-      const head = el('div', 'param-head');
       const lab = el('label', 'label'); lab.htmlFor = id; lab.innerHTML = p.label;
       const num = el('input', 'num'); num.type = 'text'; num.inputMode = 'decimal'; num.id = id; num.autocomplete = 'off';
       num.setAttribute('aria-describedby', id + '-r');
       const unit = el('span', 'unit', p.unit || '');
       const nw = el('span', 'num-wrap'); nw.append(num, unit);
-      head.append(lab, nw);
       const rng = el('input', 'slider'); rng.type = 'range'; rng.min = p.min; rng.max = p.max; rng.step = p.step;
       rng.setAttribute('aria-label', lab.textContent);
-      const rangeNote = el('p', 'range-note'); rangeNote.id = id + '-r';
-      rangeNote.textContent = fmt(p.min, p.digits) + ' 〜 ' + fmt(p.max, p.digits) + (p.unit ? ' ' + p.unit : '') + (p.note ? '　' + p.note : '');
-      g.append(head, rng, rangeNote); box.append(g);
+      const rangeNote = el('span', 'sr'); rangeNote.id = id + '-r';
+      rangeNote.textContent = fmt(p.min, p.digits) + ' 〜 ' + fmt(p.max, p.digits) + (p.unit ? ' ' + p.unit : '');
+      rng.title = num.title = rangeNote.textContent;
+      g.append(lab, rng, nw, rangeNote); box.append(g);
       rng.addEventListener('input', () => setValue(p.key, Number(rng.value)));
       // 直接入力：Enter か欄を出たときに反映。範囲外はいちばん近い値に
       const commit = () => {
@@ -193,9 +193,8 @@
     });
     // 表示の切りかえ
     if (sim.toggles.length) {
-      const g = el('div', 'group');
-      g.append(el('span', 'label', '表示'));
-      const row = el('div', 'toggles');
+      const g = el('div', 'group toggles-g');
+      const row = el('div', 'toggles'); row.setAttribute('role', 'group'); row.setAttribute('aria-label', '表示');
       sim.toggles.forEach((t) => {
         const l = el('label', 'switch');
         const cb = el('input'); cb.type = 'checkbox';
@@ -206,10 +205,10 @@
       });
       g.append(row); box.append(g);
     }
-    const acts = el('div', 'actions');
-    const resetAll = el('button', 'btn', '初期状態にもどす'); resetAll.type = 'button';
-    resetAll.addEventListener('click', () => { applyValues(defaults, true); toast('初期状態にもどした'); });
-    const share = el('button', 'btn ghost', 'この設定のURLをコピー'); share.type = 'button';
+    const acts = el('div', 'ctrl-acts');
+    const resetAll = el('button', 'mini', '↺ はじめにもどす'); resetAll.type = 'button';
+    resetAll.addEventListener('click', () => { applyValues(defaults, true); toast('はじめの値にもどした'); });
+    const share = el('button', 'mini ghost', 'URLをコピー'); share.type = 'button'; share.title = 'この設定で開くURLをコピー';
     share.addEventListener('click', copyUrl);
     acts.append(resetAll, share);
     box.append(acts);
@@ -326,7 +325,7 @@
       if (e.key === 'Escape' && simEl.classList.contains('is-full')) toggleFull();
     });
 
-    // ---------- STEP のタブ ----------
+    // ---------- なぜ？・確認問題 のタブ ----------
     const tabs = Array.from(document.querySelectorAll('.steps [role="tab"]'));
     const seen = store.get('sm:seen', {});
     let cur = 0;
@@ -338,36 +337,39 @@
         $('#' + t.getAttribute('aria-controls')).hidden = !on;
       });
       if (focus) tabs[i].focus();
-      if (i === 2) renderExplain();
-      if (i === 3 && !quizState) startQuiz();
+      if (i === 0) setTimeout(renderExplain, 0);   // 教材のファイルを読み終わってから（register の中で呼ばれるときがある）
+      if (i === 1 && !quizState) startQuiz();
     }
     tabs.forEach((t, i) => {
       t.addEventListener('click', () => showStep(i));
       t.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); showStep((i + (e.key === 'ArrowRight' ? 1 : 3)) % 4, true); }
+        if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); showStep((i + 1) % tabs.length, true); }
         if (e.key === 'Home') { e.preventDefault(); showStep(0, true); }
-        if (e.key === 'End') { e.preventDefault(); showStep(3, true); }
+        if (e.key === 'End') { e.preventDefault(); showStep(tabs.length - 1, true); }
       });
     });
-    document.querySelectorAll('[data-go-step]').forEach((b) => b.addEventListener('click', () => {
-      showStep(Number(b.dataset.goStep));
-      const p = $('.panel'); if (p && p.getBoundingClientRect().top < 0) p.scrollIntoView({ block: 'start', behavior: still() ? 'auto' : 'smooth' });
-    }));
-
-    // STEP 1
+    // なぜ？：はじめは要点（式・今の値）だけ。「くわしく読む」で全部
+    const moreBtn = $('#moreBtn'), moreBox = $('#moreBox'), exEl = $('#explain');
+    moreBtn.addEventListener('click', () => {
+      const open = moreBtn.getAttribute('aria-expanded') !== 'true';
+      moreBtn.setAttribute('aria-expanded', String(open));
+      moreBtn.textContent = open ? '短くする' : 'くわしく読む';
+      exEl.classList.toggle('brief', !open);
+      moreBox.hidden = !open;
+    });
     $('#intro').innerHTML = sim.intro || '';
     const asm = (sim.assumptions || []).map((a) => '<li>' + a + '</li>').join('');
     document.querySelectorAll('.assume-list').forEach((u) => { u.innerHTML = asm; u.closest('.assume').hidden = !asm; });
 
-    // STEP 3
+    // なぜ？
     let explainDirty = true;
     function renderExplain() {
-      if (!explainDirty || cur !== 2 || !sim.explain) return;
+      if (!explainDirty || cur !== 0 || !sim.explain) return;
       explainDirty = false;
       $('#explain').innerHTML = sim.explain(S);
     }
 
-    // ---------- STEP 4 確認問題 ----------
+    // ---------- 確認問題 ----------
     let quizState = null;
     const qBox = $('#quiz');
     function startQuiz() {
@@ -425,12 +427,12 @@
       qBox.innerHTML = '';
       const r = el('div', 'quiz-end');
       r.innerHTML = '<p class="quiz-big">' + st.ok + ' / ' + n + '</p><p>' +
-        (st.ok === n ? '全問正解！式と図の関係がよくわかってる。' : st.ok >= n * 0.6 ? 'いい感じ。まちがえた問題は「なぜ？」をもう一度読んでみよう。' : 'まずは「動かす」で値を変えて、図がどう変わるか見てからもう一度やってみよう。') +
-        '</p><p class="hint">問題は今の設定から作っている。値を変えてからもう一度やると、ちがう数の問題になる。</p>';
+        (st.ok === n ? '全問正解！' : st.ok >= n * 0.6 ? 'いい感じ。まちがえた所は「なぜ？」を見てみよう。' : '値を動かして図を見てから、もう一度やってみよう。') +
+        '</p><p class="hint">値を変えてからやると、ちがう数の問題になる。</p>';
       const again = el('button', 'btn primary', 'もう一度'); again.type = 'button';
       again.addEventListener('click', startQuiz);
       const back = el('button', 'btn', '動かしてみる'); back.type = 'button';
-      back.addEventListener('click', () => showStep(1));
+      back.addEventListener('click', () => { const c = $('.ctrl-box'); if (c) c.scrollIntoView({ block: 'center', behavior: still() ? 'auto' : 'smooth' }); });
       const a = el('div', 'actions'); a.append(again, back); r.append(a);
       qBox.append(r);
       if (root.Celebrate) root.Celebrate.result(r, { score: st.ok, n, prevBest: prev && prev.n === n ? prev.ok : null });
@@ -564,8 +566,18 @@
     syncInputs();
     roStarted = true;
     paint(true);
-    showStep(seen[sim.id] ? 1 : 0);
+    showStep(0);
     seen[sim.id] = 1; store.set('sm:seen', seen);
+    // 図を指でさわれる教材：はじめの数回だけ「さわれる」を図の上に出す（さわったら消える）
+    if (sim.dragHint) {
+      const hint = $('#dragHint'), hs = store.get('sm:hint', {});
+      if ((hs[sim.id] || 0) < 3) {
+        hint.textContent = sim.dragHint; hint.hidden = false;
+        hs[sim.id] = (hs[sim.id] || 0) + 1; store.set('sm:hint', hs);
+        const off = () => { hint.hidden = true; hs[sim.id] = 3; store.set('sm:hint', hs); };
+        stage.addEventListener('pointerdown', off, { once: true });
+      }
+    }
     noteResume();
     document.body.classList.add('ready');
     root.__sim = { S, api, sim, setValue, setPlaying, startQuiz };   // 確認用（テスト）

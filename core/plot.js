@@ -235,13 +235,15 @@
       c.setLineDash([]); tri(c, X1, Y1, ang, h);
       this.clip(false); c.restore();
     }
-    // 点（shape: 'dot' 塗り・'ring' 白ぬき・'square'・'diamond'。色だけで見分けなくていいように形も変えられる）
+    // 点（shape: 'dot' 塗り・'ring' 白ぬき・'square'・'diamond'。色だけで見分けなくていいように形も変えられる。grip: true でつかめる点の輪）
     point(x, y, opt) {
       opt = Object.assign({ color: colors().c1, r: 5.5, shape: 'dot', label: '', pos: 'ne', labelColor: null, bold: true }, opt || {});
       if (!Number.isFinite(x) || !Number.isFinite(y)) return;
       const c = this.ctx, C = colors(), X = this.X(x), Y = this.Y(y), B = this.plotBox;
       if (X < B.l - 2 || X > B.r + 2 || Y < B.t - 2 || Y > B.b + 2) return;
       c.save();
+      // grip:true → 指でつかめる点。まわりにうすい輪をかいて「さわれる」ことを見せる
+      if (opt.grip) { c.globalAlpha = 0.2; c.fillStyle = opt.color; c.beginPath(); c.arc(X, Y, opt.r + 10, 0, Math.PI * 2); c.fill(); c.globalAlpha = 1; }
       c.lineWidth = 2.2; c.strokeStyle = opt.color; c.fillStyle = opt.shape === 'ring' ? C.paper : opt.color;
       c.beginPath();
       if (opt.shape === 'square') c.rect(X - opt.r, Y - opt.r, opt.r * 2, opt.r * 2);

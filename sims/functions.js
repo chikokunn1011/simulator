@@ -43,6 +43,7 @@
   window.SimApp.register({
     id: 'functions',
     zoom: true,
+    dragHint: '点（P・切片・頂点）を指で動かせる',
     intro:
       '<p><b>一次関数</b> <i class="v">y</i> = <i class="v">ax</i> + <i class="v">b</i> のグラフは直線、<b>二次関数</b> <i class="v">y</i> = <i class="v">ax</i>² + <i class="v">bx</i> + <i class="v">c</i> のグラフは放物線になる。</p>' +
       '<p>式の中の数（係数）を変えると、グラフはどう動く？ 傾き・切片・頂点・軸・<i class="v">x</i> 軸との交点が、式のどこに表れているかを見つけよう。</p>' +
@@ -59,7 +60,7 @@
       { key: 'b', label: '<i class="v">b</i>', min: -10, max: 10, step: 0.1, value: 1, digits: 1,
         labelOf: (s) => isQuad(s) ? '<i class="v">b</i>（<i class="v">x</i> の係数）' : '<i class="v">b</i>（切片）' },
       { key: 'c', label: '<i class="v">c</i>（定数項）', min: -10, max: 10, step: 0.1, value: 0, digits: 1, show: isQuad },
-      { key: 'x0', label: '点 P の <i class="v">x</i> 座標', min: -10, max: 10, step: 0.1, value: 1, digits: 1, note: 'グラフをタップしても動かせる' },
+      { key: 'x0', label: '点 P の <i class="v">x</i>', min: -10, max: 10, step: 0.1, value: 1, digits: 1 },
       { key: 'dx', label: '<i class="v">x</i> の増加量', min: 0.5, max: 6, step: 0.5, value: 2, digits: 1, show: (s) => s.rate }
     ],
     toggles: [
@@ -82,35 +83,83 @@
     init(api) {
       S0 = api.S;
       cv = document.createElement('canvas');
-      cv.className = 'pan';
       cv.setAttribute('role', 'img');
       api.stage.append(cv);
       plot = new window.SimPlot(cv, { xmin: -10, xmax: 10, ymin: -10, ymax: 10, equal: true, xlabel: 'x', ylabel: 'y' });
+      api.plots.push(plot);
       // スマホの幅では少し拡大して始める（縮小ボタンで広く見られる）
       if (cv.clientWidth < 520) plot.setHome({ xmin: -7, xmax: 7, ymin: -7, ymax: 7 });
-      // マウス：点 P の近くをつかむと P を動かす。ほかの所をドラッグすると表示を動かす。ホイールで拡大・縮小
-      // タッチ：タップした所に P を動かす（スクロールのじゃまをしないよう、ドラッグはしない）
-      let drag = null;
+      // 指・マウスで直接さわる：
+      //   ・点 P をつかむ → グラフにそって動かす（x 座標）
+      //   ・切片（一次関数）をつかむ → 上下に動かして b を変える
+      //   ・頂点（二次関数）をつかむ → 頂点ごと動かす（a はそのまま、b・c が変わる）
+      //   ・ほかの所をドラッグ → 表示を動かす。2本指でひろげる・ちぢめる → 拡大・縮小
+      //   ・タップ → その x に点 P を動かす
+      cv.className = 'drag';
+      const r10 = (v) => Math.round(v * 10) / 10;
+      const pts = new Map();
+      let drag = null, pinch = null;
+      const pos = (e) => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+      function grab(x, y, touch) {
+        const R = touch ? 26 : 16, f = curF(S0), cand = [];
+        cand.push(['p', plot.X(S0.x0), plot.Y(f(S0.x0))]);
+        if (!S0.keys) { /* 切片・頂点をかいていないときはつかめない */ } else if (!isQuad(S0)) cand.push(['b', plot.X(0), plot.Y(S0.b)]);
+        else { const Q = L.quadratic(S0.a, S0.b, S0.c); if (!Q.degenerate) cand.push(['v', plot.X(Q.p), plot.Y(Q.q)]); }
+        let best = null, bd = R;
+        cand.forEach((c) => { const d = Math.hypot(x - c[1], y - c[2]); if (d <= bd) { bd = d; best = c[0]; } });
+        return best;
+      }
+      function moveTo(kind, x, y) {
+        const wx = plot.wx(x), wy = plot.wy(y);
+        if (kind === 'p') api.set('x0', r10(wx));
+        else if (kind === 'b') api.set('b', r10(wy));
+        else if (kind === 'v') {
+          const p = r10(wx), q = r10(wy), a = S0.a;
+          api.setMany({ b: r10(-2 * a * p), c: r10(a * p * p + q) });
+        }
+      }
       cv.addEventListener('pointerdown', (e) => {
-        if (e.pointerType === 'touch') return;
-        const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
-        const f = curF(S0), px = plot.X(S0.x0), py = plot.Y(f(S0.x0));
-        drag = Math.hypot(x - px, y - py) < 18 ? { kind: 'p' } : { kind: 'pan', x, y };
-        cv.setPointerCapture(e.pointerId);
+        const [x, y] = pos(e);
+        pts.set(e.pointerId, [x, y]);
+        try { cv.setPointerCapture(e.pointerId); } catch (er) { /* なくても動く */ }
+        if (pts.size === 2) {   // 2本指：拡大・縮小
+          const [a, b] = [...pts.values()];
+          pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]) || 1 };
+          drag = null; return;
+        }
+        const k = grab(x, y, e.pointerType === 'touch');
+        drag = k ? { kind: k } : { kind: 'pan', x, y, x0: x, y0: y, moved: false };
+        if (k) cv.style.cursor = 'grabbing';
       });
       cv.addEventListener('pointermove', (e) => {
+        if (!pts.has(e.pointerId)) {   // マウスがのっているだけ：つかめる所でカーソルを変える
+          if (e.pointerType === 'mouse') { const [x, y] = pos(e); cv.style.cursor = grab(x, y, false) ? 'grab' : 'move'; }
+          return;
+        }
+        const [x, y] = pos(e);
+        pts.set(e.pointerId, [x, y]);
+        if (pinch && pts.size === 2) {
+          const [a, b] = [...pts.values()];
+          const d = Math.hypot(a[0] - b[0], a[1] - b[1]) || 1;
+          plot.zoom(pinch.d / d, plot.wx((a[0] + b[0]) / 2), plot.wy((a[1] + b[1]) / 2));
+          pinch.d = d; api.redraw(); return;
+        }
         if (!drag) return;
-        const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
-        if (drag.kind === 'p') api.set('x0', Math.round(plot.wx(x) * 10) / 10);
-        else { plot.pan(x - drag.x, y - drag.y); drag.x = x; drag.y = y; api.redraw(); }
+        if (drag.kind === 'pan') {
+          if (Math.hypot(x - drag.x0, y - drag.y0) > 6) drag.moved = true;
+          plot.pan(x - drag.x, y - drag.y); drag.x = x; drag.y = y; api.redraw();
+        } else moveTo(drag.kind, x, y);
       });
-      const end = () => { drag = null; };
+      const end = (e) => {
+        const was = drag;
+        pts.delete(e.pointerId);
+        if (pts.size < 2) pinch = null;
+        if (pts.size === 0) {
+          drag = null; cv.style.cursor = '';
+          if (e.type === 'pointerup' && was && was.kind === 'pan' && !was.moved) { const [x] = pos(e); api.set('x0', r10(plot.wx(x))); }
+        } else drag = null;
+      };
       cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
-      cv.addEventListener('click', (e) => {
-        if (e.pointerType && e.pointerType !== 'touch') return;
-        const r = cv.getBoundingClientRect();
-        api.set('x0', Math.round(plot.wx(e.clientX - r.left) * 10) / 10);
-      });
       cv.addEventListener('wheel', (e) => {
         if (!e.ctrlKey && !e.metaKey && !e.altKey) return;   // ふつうのホイールはページのスクロール。Ctrl＋ホイールで拡大・縮小
         e.preventDefault();
@@ -157,17 +206,17 @@
       // 切片・交点・頂点
       if (s.keys) {
         if (!quad) {
-          plot.point(0, Li.b, { color: C.c2, shape: 'diamond', label: '切片 (0, ' + fmt(Li.b, 1) + ')', pos: s.a >= 0 ? 'nw' : 'ne' });
+          plot.point(0, Li.b, { color: C.c2, shape: 'diamond', grip: true, label: '切片 (0, ' + fmt(Li.b, 1) + ')', pos: s.a >= 0 ? 'nw' : 'ne' });
           if (typeof Li.xInt === 'number') plot.point(Li.xInt, 0, { color: C.c3, shape: 'square', label: '(' + nf(Li.xInt).text + ', 0)', pos: s.a >= 0 ? 'se' : 'sw' });
         } else if (!Q.degenerate) {
-          plot.point(Q.p, Q.q, { color: C.c4, shape: 'diamond', r: 6, label: '頂点 ' + coordT(Q.p, Q.q), pos: Q.a > 0 ? 's' : 'n' });
+          plot.point(Q.p, Q.q, { color: C.c4, shape: 'diamond', r: 6, grip: true, label: '頂点 ' + coordT(Q.p, Q.q), pos: Q.a > 0 ? 's' : 'n' });
           Q.roots.forEach((r, i) => plot.point(r, 0, { color: C.c3, shape: 'square', label: Q.roots.length === 1 ? '接点 (' + nf(r).text + ', 0)' : '(' + nf(r).text + ', 0)', pos: i === 0 && Q.roots.length > 1 ? 'sw' : 'se' }));
           if (Q.p !== 0) plot.point(0, Q.c, { color: C.c2, r: 4, shape: 'ring' });
         }
       }
       // 点 P
       const y0 = f(s.x0);
-      plot.point(s.x0, y0, { color: C.c2, r: 7, label: 'P' + coordT(s.x0, y0), pos: (quad ? Q.a : s.a) >= 0 ? 'nw' : 'ne' });
+      plot.point(s.x0, y0, { color: C.c2, r: 7, grip: true, label: 'P' + coordT(s.x0, y0), pos: (quad ? Q.a : s.a) >= 0 ? 'nw' : 'ne' });
       cv.setAttribute('aria-label', 'グラフ：' + (quad ? quadEq(s.a, s.b, s.c) : linEq(s.a, s.b)).replace(/<[^>]+>/g, '') + '。点P ' + coordT(s.x0, y0));
     },
 

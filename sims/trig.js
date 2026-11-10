@@ -46,6 +46,7 @@
 
   window.SimApp.register({
     id: 'trig',
+    dragHint: '点 P を指で回せる',
     animated: true,
     intro:
       '<p>原点を中心とする半径 1 の円（<b>単位円</b>）の上を、点 P が回る。<i class="v">x</i> 軸の正の向きから角 ' + TH + ' だけ回った点 P の座標を (cos ' + TH + ', sin ' + TH + ') と決めるのが、三角関数の考え方だよ。</p>' +
@@ -227,9 +228,7 @@
     // 補助線：P の高さ（＝ sin θ）をグラフへ
     if (s.gsin && sideBySide()) pc.seg(v.cos, v.sin, Rg.xmax, v.sin, { color: C.c2, width: 1.2, dash: [3, 4] });
     // 点 P
-    pc.point(v.cos, v.sin, { color: C.ink, r: 7, label: 'P', pos: v.sin >= 0 ? 'n' : 's' });
-    // つかめることがわかるよう、P のまわりに輪
-    c.save(); c.strokeStyle = C.muted; c.globalAlpha = 0.35; c.lineWidth = 1.5; c.beginPath(); c.arc(pc.X(v.cos), pc.Y(v.sin), 13, 0, Math.PI * 2); c.stroke(); c.restore();
+    pc.point(v.cos, v.sin, { color: C.ink, r: 7, grip: true, label: 'P', pos: v.sin >= 0 ? 'n' : 's' });
     cvC.setAttribute('aria-label', '単位円：角 ' + degText(th) + '、点P(' + fix(v.cos, 3) + ', ' + fix(v.sin, 3) + ')。' + (tanOk ? 'T(1, ' + fix(v.tan, 3) + ')' : 'tan は定義されない'));
   }
   function drawAngleArc(c, th, X0, Y0, R, C) {

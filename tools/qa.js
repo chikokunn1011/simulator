@@ -30,7 +30,7 @@ const { chromium } = require('playwright');
         if (new Set(q.choices).size !== q.choices.length) out.push('dup choices'); });
     }
     // 確認問題を1周
-    document.getElementById('tab-4').click();
+    document.getElementById('tab-2').click();
     let n = 0;
     while (document.querySelector('.quiz-choice') && n < 10) {
       document.querySelector('.quiz-choice').click(); n++;
@@ -38,8 +38,7 @@ const { chromium } = require('playwright');
     }
     out.push('quiz end: ' + (document.querySelector('.quiz-big') || {}).textContent);
     // 初期状態にもどす
-    document.getElementById('tab-2').click();
-    [...document.querySelectorAll('.btn')].find(b => b.textContent === '初期状態にもどす').click();
+    [...document.querySelectorAll('.ctrl-acts .mini')].find(b => b.textContent.includes('はじめにもどす')).click();
     const diff = Object.keys(sim.sim.params.reduce((o,p)=>{if (sim.S[p.key]!==p.value) o[p.key]=1; return o;},{}));
     out.push('reset diff: ' + diff.join(','));
     return out;

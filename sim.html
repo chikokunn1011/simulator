@@ -60,9 +60,9 @@
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <!-- ホーム画面に追加したときのアイコンと名前 -->
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=202611101200">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=202611101200">
-<link rel="manifest" href="manifest.webmanifest?v=202611101200">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=202611101400">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=202611101400">
+<link rel="manifest" href="manifest.webmanifest?v=202611101400">
 <meta name="theme-color" content="#1c1846">
 <meta name="apple-mobile-web-app-title" content="シミュレーター">
 <meta name="mobile-web-app-capable" content="yes">
@@ -110,70 +110,49 @@ try { window.ewStyle(JSON.parse(localStorage.getItem('ew:style'))); } catch (e) 
 </script>
 <script src="mobile.js"></script>
 <script src="ui.js"></script>
-<link rel="stylesheet" href="style.css?v=202611101200">
+<link rel="stylesheet" href="style.css?v=202611101400">
 <link rel="stylesheet" href="theme.css">
 <script src="nav.js" defer></script>
 </head>
 <body class="sim-body">
 <div class="page">
-  <header class="masthead">
-    <div class="brand">
-      <a class="home-link" href="./">← シミュレーター一覧</a>
+  <header class="sim-head">
+    <a class="back" href="./" aria-label="シミュレーター一覧にもどる" title="一覧にもどる"><span aria-hidden="true">←</span></a>
+    <div class="sim-title">
       <h1 id="title">シミュレーター</h1>
-      <p class="meta" id="meta"></p>
       <p class="lede" id="lede"></p>
-    </div>
-    <div class="mast-right">
-    <a class="contact-link" href="/study/contact.html?site=simulator">要望・不具合を送る</a>
-    <label class="style-pick"><span>見た目</span>
-      <select id="style">
-        <option value="note">ノート</option>
-        <option value="chalk">黒板</option>
-        <option value="washi">和紙</option>
-        <option value="grid">方眼</option>
-        <option value="night">夜</option>
-        <option value="sakura">さくら</option>
-        <option value="kraft">ふせん</option>
-        <option value="ocean">海</option>
-        <option value="forest">森</option>
-        <option value="retro">レトロゲーム</option>
-        <option value="dot">ドット</option>
-      </select>
-    </label>
     </div>
   </header>
 
   <main class="sim" id="sim">
     <section class="stage-box" aria-label="シミュレーション">
       <div class="formula" id="formula"></div>
-      <div class="stage" id="stage"></div>
+      <div class="stage-wrap">
+        <div class="stage" id="stage"></div>
+        <p class="drag-hint" id="dragHint" hidden></p>
+      </div>
       <div class="toolbar" id="toolbar" role="toolbar" aria-label="再生・表示"></div>
       <dl class="readouts" id="readouts"></dl>
     </section>
 
-    <section class="panel" aria-label="学習の流れ">
-      <div class="steps" role="tablist" aria-label="学習の流れ">
-        <button type="button" role="tab" id="tab-1" aria-controls="step-1"><b>1</b>知る</button>
-        <button type="button" role="tab" id="tab-2" aria-controls="step-2"><b>2</b>動かす</button>
-        <button type="button" role="tab" id="tab-3" aria-controls="step-3"><b>3</b>なぜ？</button>
-        <button type="button" role="tab" id="tab-4" aria-controls="step-4"><b>4</b>確認問題</button>
+    <section class="ctrl-box" aria-label="値を変える">
+      <div class="controls" id="controls"></div>
+    </section>
+
+    <section class="panel" aria-label="なぜ？・確認問題">
+      <div class="steps" role="tablist" aria-label="なぜ？・確認問題">
+        <button type="button" role="tab" id="tab-1" aria-controls="step-1">なぜ？</button>
+        <button type="button" role="tab" id="tab-2" aria-controls="step-2">確認問題</button>
       </div>
       <div class="step" role="tabpanel" id="step-1" aria-labelledby="tab-1">
-        <div class="prose" id="intro"></div>
-        <div class="assume"><p class="assume-h">このモデルの約束</p><ul class="assume-list"></ul></div>
-        <div class="actions"><button type="button" class="btn primary" data-go-step="1">動かしてみる →</button></div>
+        <div class="prose brief" id="explain"></div>
+        <button type="button" class="more-btn" id="moreBtn" aria-expanded="false" aria-controls="explain">くわしく読む</button>
+        <div class="more-box" id="moreBox" hidden>
+          <div class="prose" id="intro"></div>
+          <div class="assume"><p class="assume-h">このモデルの約束</p><ul class="assume-list"></ul></div>
+        </div>
       </div>
       <div class="step" role="tabpanel" id="step-2" aria-labelledby="tab-2" hidden>
-        <div class="controls" id="controls"></div>
-        <p class="hint keys">キーボード：スライダーは ← → で少しずつ（数の欄は ↑ ↓、Shift で10倍）。<span class="k-anim">Space で再生・一時停止、</span>F で全画面。</p>
-        <div class="actions"><button type="button" class="btn primary" data-go-step="2">なぜそうなる？ →</button></div>
-      </div>
-      <div class="step" role="tabpanel" id="step-3" aria-labelledby="tab-3" hidden>
-        <div class="prose" id="explain"></div>
-        <div class="assume"><p class="assume-h">このモデルの約束・注意</p><ul class="assume-list"></ul></div>
-        <div class="actions"><button type="button" class="btn primary" data-go-step="3">確認問題 →</button></div>
-      </div>
-      <div class="step" role="tabpanel" id="step-4" aria-labelledby="tab-4" hidden>
         <div class="quiz" id="quiz"></div>
       </div>
     </section>
@@ -187,10 +166,10 @@ try { window.ewStyle(JSON.parse(localStorage.getItem('ew:style'))); } catch (e) 
   </footer>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="catalog.js?v=202611101200"></script>
-<script src="core/plot.js?v=202611101200"></script>
-<script src="core/sim.js?v=202611101200"></script>
+<script src="catalog.js?v=202611101400"></script>
+<script src="core/plot.js?v=202611101400"></script>
+<script src="core/sim.js?v=202611101400"></script>
 <script src="celebrate.js"></script>
-<script src="core/load.js?v=202611101200"></script>
+<script src="core/load.js?v=202611101400"></script>
 </body>
 </html>

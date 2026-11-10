@@ -290,6 +290,7 @@
 
   window.SimApp.register({
     id: 'motion',
+    dragHint: 'グラフを横になぞると時間が動く',
     animated: true,
     intro:
       '<p>一直線の上を走る物体（台車）の動きを調べよう。<b>等速直線運動</b>は速さも向きも変わらない運動、<b>等加速度直線運動</b>は速度が 1 秒あたり同じだけ変わる運動だよ。</p>' +
@@ -340,7 +341,7 @@
       // この教材は図とグラフを縦に積むので、スマホでは図を少し高くする（最小限）
       if (!document.getElementById('motion-style')) {
         const st = document.createElement('style'); st.id = 'motion-style';
-        st.textContent = '@media (max-width: 899px) and (min-height: 560px) { body[data-sim="motion"] .stage { --stage-h: clamp(250px, 41vh, 440px); } }' +
+        st.textContent = '@media (max-width: 899px) and (min-height: 560px) { body[data-sim="motion"] .stage { --stage-h: clamp(240px, 37vh, 400px); } }' +
           '@media (min-width: 900px) { body[data-sim="motion"] .stage { --stage-h: clamp(420px, calc(100vh - 300px), 680px); } }' +
           'body[data-sim="motion"] .mo-line { display: block; } body[data-sim="motion"] .mo-eq { display: inline-block; white-space: nowrap; }' +
           'body[data-sim="motion"] .mo-sm { display: none; } @media (max-width: 520px) { body[data-sim="motion"] .mo-eq.mo-gen { display: none; } body[data-sim="motion"] .mo-sm { display: inline; } }' +
