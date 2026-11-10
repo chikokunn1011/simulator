@@ -25,11 +25,10 @@
     .replace(/[ァ-ヶ]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0x60));
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 
-  $('#total').textContent = SIMS.filter((s) => s.status === 'open').length;
 
   // 教科のタブ（すべて・数学・理科（物理・化学・地学）・各教科）
   const subjBox = $('#subj');
-  const subjTabs = [['', 'すべて'], ['数学', '数学'], ['sci', '理科（全部）'], ['物理', '物理'], ['化学', '化学'], ['地学', '地学']];
+  const subjTabs = [['', 'すべて'], ['数学', '数学'], ['sci', '理科'], ['物理', '物理'], ['化学', '化学'], ['地学', '地学']];
   subjTabs.forEach(([v, lab]) => {
     const b = el('button'); b.type = 'button'; b.dataset.v = v;
     if (SUB[v]) { const d = el('span', 'dot'); d.style.background = SUB[v].color; d.setAttribute('aria-hidden', 'true'); b.append(d); }
@@ -50,6 +49,8 @@
   const soon = $('#soon');
   soon.checked = st.soon;
   soon.addEventListener('change', () => { st.soon = soon.checked; save(); render(); });
+  // しぼりこみを使っているときは、たたまずに見せる
+  if (st.lv || st.soon) $('.more-filter').open = true;
 
   function save() { store.set('sm:filter', { subj: st.subj, lv: st.lv, soon: st.soon }); }
   function subjOk(s) { return !st.subj || (st.subj === 'sci' ? s.subject !== '数学' : s.subject === st.subj); }
@@ -132,14 +133,6 @@
       }
     }
   }
-
-  // 見た目（ほかのサイトと共通の ew:style）
-  const stylePick = $('#style');
-  stylePick.value = document.documentElement.dataset.style || 'note';
-  stylePick.addEventListener('change', () => {
-    store.set('ew:style', stylePick.value);
-    if (window.ewStyle) window.ewStyle(stylePick.value);
-  });
 
   // ホームの「全部のサイトから探す」から来たとき（?find=教材のid）は、その教材だけを出す
   const find = qs.get('find');

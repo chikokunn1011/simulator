@@ -60,9 +60,9 @@
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <!-- ホーム画面に追加したときのアイコンと名前 -->
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=202611101200">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=202611101200">
-<link rel="manifest" href="manifest.webmanifest?v=202611101200">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=202611101400">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=202611101400">
+<link rel="manifest" href="manifest.webmanifest?v=202611101400">
 <meta name="theme-color" content="#1c1846">
 <meta name="apple-mobile-web-app-title" content="シミュレーター">
 <meta name="mobile-web-app-capable" content="yes">
@@ -110,7 +110,7 @@ try { window.ewStyle(JSON.parse(localStorage.getItem('ew:style'))); } catch (e) 
 </script>
 <script src="mobile.js"></script>
 <script src="ui.js"></script>
-<link rel="stylesheet" href="style.css?v=202611101200">
+<link rel="stylesheet" href="style.css?v=202611101400">
 <link rel="stylesheet" href="theme.css">
 <script src="nav.js" defer></script>
 </head>
@@ -118,65 +118,39 @@ try { window.ewStyle(JSON.parse(localStorage.getItem('ew:style'))); } catch (e) 
 <div class="page">
   <header class="masthead">
     <div class="brand">
-      <a class="home-link" href="/study/">← ホーム（SAPIA）</a>
+      <a class="home-link" href="/study/">← ホーム</a>
       <h1>数学・理科シミュレーター</h1>
-      <p class="lede">値を動かすと、図・グラフ・式がいっしょに変わる。見て、さわって、「なぜ？」までわかる教材 <b id="total">0</b> 本。</p>
-    </div>
-    <div class="mast-right">
-    <a class="contact-link" href="/study/contact.html?site=simulator">要望・不具合を送る</a>
-    <label class="style-pick"><span>見た目</span>
-      <select id="style">
-        <option value="note">ノート</option>
-        <option value="chalk">黒板</option>
-        <option value="washi">和紙</option>
-        <option value="grid">方眼</option>
-        <option value="night">夜</option>
-        <option value="sakura">さくら</option>
-        <option value="kraft">ふせん</option>
-        <option value="ocean">海</option>
-        <option value="forest">森</option>
-        <option value="retro">レトロゲーム</option>
-        <option value="dot">ドット</option>
-      </select>
-    </label>
+      <p class="lede">値を動かして、図と式で確かめよう。</p>
     </div>
   </header>
 
   <section class="finder" aria-label="教材をさがす">
     <div class="seg subj-tabs" role="group" aria-label="教科" id="subj"></div>
-    <div class="finder-row">
-      <div class="seg" role="group" aria-label="学校段階" id="lv"></div>
-      <label class="unit-pick"><span class="label">単元</span>
-        <select id="unit"><option value="">すべての単元</option></select>
-      </label>
-      <label class="search"><span class="sr">キーワードでさがす</span>
-        <input id="q" type="search" placeholder="キーワード（例: 放物線 / 電流 / sin）" autocomplete="off">
-      </label>
-    </div>
-    <label class="switch small"><input type="checkbox" id="soon"><span>準備中の教材も表示</span></label>
+    <label class="search"><span class="sr">キーワードでさがす</span>
+      <input id="q" type="search" placeholder="🔍 さがす（例: 放物線・電流・sin）" autocomplete="off">
+    </label>
+    <details class="more-filter">
+      <summary>しぼりこみ</summary>
+      <div class="finder-row">
+        <div class="seg" role="group" aria-label="学校段階" id="lv"></div>
+        <label class="unit-pick"><span class="label">単元</span>
+          <select id="unit"><option value="">すべての単元</option></select>
+        </label>
+        <label class="switch small"><input type="checkbox" id="soon"><span>準備中も表示</span></label>
+      </div>
+    </details>
   </section>
 
   <p class="count" id="count" aria-live="polite"></p>
   <div id="list" class="sim-groups"></div>
   <p class="empty" id="empty" hidden>見つからなかった。教科・学校段階・単元・キーワードを見直してみて。</p>
 
-  <section class="howto">
-    <h2>使い方</h2>
-    <ol>
-      <li><b>STEP 1 知る</b>：何を調べる教材かを短く読む。</li>
-      <li><b>STEP 2 動かす</b>：スライダーや数の入力で値を変えて、図・グラフ・式の変化を見る。「代表的な条件」ですぐに試せる。</li>
-      <li><b>STEP 3 なぜ？</b>：今の値を使った説明で、そうなる理由を確かめる。</li>
-      <li><b>STEP 4 確認問題</b>：今の設定から作った問題で、わかったかを確かめる。</li>
-    </ol>
-    <p class="hint">授業では「全画面」でプロジェクターに大きく映せる。「この設定のURLをコピー」で、同じ条件のページを配れる。</p>
-  </section>
-
   <footer class="foot">
-    <p>計算と描画はすべてこの端末の中で行う（ログイン・データの送信はなし）。図は見やすさのために実際の大きさと変えているところがある。各教材の「このモデルの約束」を見てね。</p>
+    <p>計算と描画はすべてこの端末の中で行う（ログイン・データの送信はなし）。</p>
   </footer>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="catalog.js?v=202611101200"></script>
-<script src="app.js?v=202611101200"></script>
+<script src="catalog.js?v=202611101400"></script>
+<script src="app.js?v=202611101400"></script>
 </body>
 </html>

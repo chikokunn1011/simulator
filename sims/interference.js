@@ -25,6 +25,7 @@
 
   window.SimApp.register({
     id: 'interference',
+    dragHint: '点 P を指で動かせる',
     animated: true,
     speeds: [0.25, 0.5, 1, 2],
     intro:
@@ -273,7 +274,7 @@
     plot.point(so.s2[0], 0, { color: C.ink, r: 5, shape: 'square', label: 'S₂', pos: 's' });
     // 観測点 P（大きめの白ぬき＋中心の点）
     plot.point(s.px, s.py, { color: C.ink, r: 9, shape: 'ring' });
-    plot.point(s.px, s.py, { color: C.c3, r: 4, label: 'P', pos: s.py > R.ymax - 2 ? 'se' : 'ne' });
+    plot.point(s.px, s.py, { color: C.c3, r: 5, grip: true, label: 'P', pos: s.py > R.ymax - 2 ? 'se' : 'ne' });
 
     // ものさし（λ と 5 cm）と時間の表示
     scaleBar(s, C);

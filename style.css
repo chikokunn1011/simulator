@@ -242,7 +242,19 @@ html.has-bnav .toast { bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
 .howto ol { margin: 0 0 8px; padding-left: 1.4em; display: grid; gap: 4px; }
 
 /* ===== シミュレーターのページ ===== */
-.sim { display: grid; gap: 16px; align-items: start; }
+/* 上：← と題名だけ（説明は1行） */
+.sim-head { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.sim-head .back {
+  flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--rule);
+  background: var(--paper); color: var(--ink); text-decoration: none; font-size: 18px; font-weight: 700;
+}
+.sim-head .back:hover { border-color: var(--accent); color: var(--accent); }
+.sim-title { min-width: 0; }
+.sim-title h1 { margin: 0; font-size: clamp(20px, 3.6vw, 28px); line-height: 1.25; font-weight: 700; text-wrap: balance; }
+.sim-title .lede { margin: 2px 0 0; font-size: 13px; color: var(--muted); line-height: 1.5; }
+:root[data-style="forest"] .sim-head { --ink: #f6f2e7; --muted: #c9d8bf; color: var(--ink); }
+:root[data-style="forest"] .sim-head .back { --ink: #23301f; }
+.sim { display: grid; gap: 14px; align-items: start; }
 .stage-box {
   background: var(--paper); border: 1px solid var(--rule); border-radius: var(--radius); padding: 10px;
   display: grid; gap: 8px; min-width: 0; box-shadow: 0 6px 18px -14px rgba(20, 30, 60, .5);
@@ -250,6 +262,16 @@ html.has-bnav .toast { bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
 .formula { font-size: 19px; font-weight: 700; line-height: 1.45; min-height: 1.45em; text-align: center; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
 .formula:empty { display: none; }
 .formula .sub { display: block; font-size: 13px; font-weight: 500; color: var(--muted); }
+.stage-wrap { position: relative; min-width: 0; }
+/* 「点を指で動かせる」：はじめの数回だけ図の上に出す */
+.drag-hint {
+  position: absolute; left: 50%; top: 8px; transform: translateX(-50%); margin: 0; pointer-events: none; white-space: nowrap; z-index: 2;
+  background: var(--ink); color: var(--paper); font-size: 13px; font-weight: 700; padding: 6px 14px; border-radius: 999px;
+  box-shadow: 0 4px 14px rgba(0,0,0,.25); animation: hint-pulse 1.8s ease-in-out infinite;
+}
+.drag-hint::before { content: "👆 "; }
+@keyframes hint-pulse { 50% { opacity: .72; } }
+@media (prefers-reduced-motion: reduce) { .drag-hint { animation: none; } }
 .stage { position: relative; height: var(--stage-h, clamp(240px, 36vh, 380px)); min-height: 0; display: grid; gap: 8px; }
 .stage canvas { display: block; width: 100%; height: 100%; min-height: 0; border-radius: calc(var(--radius) - 2px); touch-action: pan-y; }
 .stage canvas.drag { touch-action: none; cursor: grab; }
@@ -259,19 +281,18 @@ html.has-bnav .toast { bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
 .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .toolbar:empty { display: none; }
 .tb {
-  display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 44px; min-height: 44px; padding: 0 12px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 42px; min-height: 42px; padding: 0 10px;
   border: 1px solid var(--rule); background: var(--paper); color: var(--ink); border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 14px;
 }
 .tb:hover { border-color: var(--accent); }
 .tb [aria-hidden] { font-size: 16px; line-height: 1; }
-.tb.play { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); min-width: 104px; }
+.tb.play { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); min-width: 64px; }
+.tb.play [aria-hidden] { font-size: 18px; }
 .tb.play.is-on { background: var(--paper); color: var(--accent); }
-.tb-t { font-size: 13px; }
-.tb.zoom-in .tb-t, .tb.zoom-out .tb-t, .tb.zoom-reset .tb-t, .tb.rewind .tb-t { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.tb-t, .speed-wrap > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 .tb.size { display: none; }
-@media (max-width: 899px) and (min-height: 560px) { .tb.size { display: inline-flex; } .tb.size .tb-t { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } }
-.sim-body .lede { font-size: 14px; }
-@media (max-width: 899px) { .sim-body .masthead { gap: 8px; } .sim-body .page { padding-top: 14px; gap: 12px; } }
+@media (max-width: 899px) and (min-height: 560px) { .tb.size { display: inline-flex; } }
+@media (max-width: 899px) { .sim-body .page { padding-top: 10px; gap: 10px; } }
 .toolbar > .tb-sep:first-child { display: none; }
 .tb-sep { width: 1px; height: 26px; background: var(--rule); margin: 0 2px; }
 .tb-gap { flex: 1; }
@@ -288,11 +309,15 @@ html.has-bnav .toast { bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
 .ro.ng dd { color: var(--ng, var(--redpen)); }
 
 .panel { background: var(--paper); border: 1px solid var(--rule); border-radius: var(--radius); min-width: 0; }
-.steps { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--rule); }
+.steps { display: grid; grid-template-columns: repeat(2, 1fr); border-bottom: 1px solid var(--rule); }
 .steps [role="tab"] {
   border: 0; background: transparent; color: var(--muted); padding: 10px 4px 9px; font-weight: 700; font-size: 14px; cursor: pointer;
-  display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 52px; border-bottom: 3px solid transparent; line-height: 1.2;
+  display: flex; align-items: center; justify-content: center; gap: 2px; min-height: 46px; border-bottom: 3px solid transparent; line-height: 1.2; font-size: 15px;
 }
+/* 「なぜ？」ははじめ要点だけ：見出し・式・今の値・表 */
+.prose.brief > :not(h3, .eq, .now, .tbl, table) { display: none; }
+.more-btn { justify-self: start; border: 0; background: transparent; color: var(--accent); font-weight: 700; font-size: 14px; padding: 6px 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.more-box { display: grid; gap: 12px; }
 .steps [role="tab"] b { font-family: var(--font-en); font-size: 12px; width: 22px; height: 22px; display: grid; place-items: center; border-radius: 50%; border: 1.5px solid currentColor; }
 .steps [role="tab"][aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
 .steps [role="tab"][aria-selected="true"] b { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
@@ -321,11 +346,23 @@ html.has-bnav .toast { bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
 .assume-h { margin: 0 0 4px; font-weight: 700; font-size: 13px; color: var(--muted); }
 .assume ul { margin: 0; padding-left: 1.2em; display: grid; gap: 2px; }
 
-.controls { display: grid; gap: 16px; }
+.ctrl-box { background: var(--paper); border: 1px solid var(--rule); border-radius: var(--radius); padding: 12px 14px; min-width: 0; }
+.controls { display: grid; gap: 10px; }
 .controls .group { display: grid; gap: 6px; min-width: 0; }
 .controls .group > .label { font-size: 13px; color: var(--muted); }
-.param-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.param-head .label { font-size: 15px; }
+/* 例（プリセット）・関数などのえらぶもの：見出しを左に小さく、1行 */
+.controls .presets-g, .controls .choice { grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 8px; }
+.controls .presets-g > .label, .controls .choice > .label { font-size: 12px; }
+/* 値：名前｜スライダー｜数 を1行に */
+.controls .param { grid-template-columns: minmax(3.2em, 7.5em) minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+.controls .param > .label { font-size: 14px; line-height: 1.3; overflow-wrap: anywhere; }
+.controls .param input.num { width: 4.6em; min-height: 38px; padding: 4px 6px; }
+.controls .param .unit { min-width: 0; }
+.controls .param .unit:empty { display: none; }
+.ctrl-acts { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; border-top: 1px dashed var(--rule); padding-top: 8px; }
+.mini { border: 1px solid var(--rule); background: transparent; color: var(--ink); border-radius: 999px; padding: 4px 12px; min-height: 36px; font-weight: 700; font-size: 13px; cursor: pointer; }
+.mini:hover { border-color: var(--accent); color: var(--accent); }
+.mini.ghost { color: var(--muted); font-weight: 500; }
 .num-wrap { display: inline-flex; align-items: center; gap: 4px; }
 input.num {
   width: 5.6em; border: 1px solid var(--rule); background: var(--desk); color: var(--ink); border-radius: 8px; padding: 6px 8px; min-height: 40px;
@@ -342,7 +379,10 @@ input.slider::-moz-range-thumb { width: 24px; height: 24px; border-radius: 50%; 
 input.slider:focus-visible { outline: none; }
 input.slider:focus-visible::-webkit-slider-thumb { outline: 3px solid var(--accent); outline-offset: 2px; }
 input.slider:focus-visible::-moz-range-thumb { outline: 3px solid var(--accent); outline-offset: 2px; }
-.toggles { display: flex; flex-wrap: wrap; gap: 2px 18px; font-size: 14px; }
+.toggles { display: flex; flex-wrap: wrap; gap: 6px; font-size: 13px; }
+.toggles .switch { border: 1px solid var(--rule); border-radius: 999px; padding: 2px 12px 2px 8px; min-height: 36px; gap: 6px; font-weight: 700; color: var(--muted); }
+.toggles .switch input { width: 16px; height: 16px; }
+.toggles .switch:has(input:checked) { border-color: var(--accent); color: var(--ink); background: color-mix(in srgb, var(--accent) 12%, var(--paper)); }
 .keys { font-size: 12px; }
 body:not(.animated) .k-anim { display: none; }
 
@@ -396,16 +436,20 @@ body:not(.animated) .k-anim { display: none; }
   .formula .sub { font-size: 12px; }
 }
 @media (max-width: 899px) {
-  .tb { min-height: 40px; min-width: 40px; padding: 0 10px; }
-  .tb.full .tb-t, .tb.play .tb-t, .speed-wrap > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-  .tb.play { min-width: 64px; }
+  .tb { min-height: 40px; min-width: 40px; padding: 0 8px; }
+  /* 例は横にすべらせて1行 */
+  .controls .presets { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; padding-bottom: 2px; }
+  .controls .presets::-webkit-scrollbar { display: none; }
+  .controls .presets .chip { flex: none; white-space: nowrap; }
+  .ctrl-box { padding: 10px 12px; }
 }
 /* PC・タブレット横：図と操作パネルを横に並べる */
 @media (min-width: 900px) {
-  .sim { grid-template-columns: minmax(0, 1fr) minmax(340px, 400px); gap: 20px; }
-  .stage-box { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); padding: 12px; }
-  .stage { --stage-h: clamp(340px, calc(100vh - 290px), 640px); }
-  .panel { max-height: none; }
+  .sim { grid-template-columns: minmax(0, 1fr) minmax(340px, 400px); grid-template-areas: "stage ctrl" "stage panel"; grid-template-rows: auto 1fr; gap: 16px 20px; }
+  .stage-box { grid-area: stage; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); padding: 12px; }
+  .ctrl-box { grid-area: ctrl; }
+  .panel { grid-area: panel; max-height: none; }
+  .stage { --stage-h: clamp(340px, calc(100vh - 250px), 660px); }
 }
 @media (min-width: 1280px) {
   .sim { grid-template-columns: minmax(0, 1fr) 420px; }
@@ -413,33 +457,49 @@ body:not(.animated) .k-anim { display: none; }
 /* 全画面（授業で大きく映す） */
 .sim:fullscreen, .sim.is-full {
   position: fixed; inset: 0; z-index: 80; background: var(--desk); padding: 14px; margin: 0; overflow: auto;
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 400px); gap: 14px; align-items: stretch;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 400px); grid-template-areas: "stage ctrl" "stage panel"; grid-template-rows: auto 1fr; gap: 14px; align-items: start;
 }
 .sim:fullscreen .stage-box, .sim.is-full .stage-box { position: static; margin: 0; border-radius: var(--radius); }
 .sim:fullscreen .stage, .sim.is-full .stage { --stage-h: calc(100vh - 270px); }
 .sim:fullscreen .formula, .sim.is-full .formula { font-size: 24px; }
 .sim:fullscreen .ro dd, .sim.is-full .ro dd { font-size: 18px; }
-.sim:fullscreen .panel, .sim.is-full .panel { overflow: auto; max-height: calc(100vh - 28px); }
+.sim:fullscreen .panel, .sim.is-full .panel { display: none; }
+.sim:fullscreen .ctrl-box, .sim.is-full .ctrl-box { overflow: auto; max-height: calc(100vh - 28px); }
 html.sim-full, html.sim-full body { overflow: hidden; }
 html.sim-full .bnav { display: none !important; }
 @media (max-width: 699px) {
   .sim:fullscreen, .sim.is-full { grid-template-columns: minmax(0, 1fr); }
   .sim:fullscreen .stage, .sim.is-full .stage { --stage-h: 52vh; }
-  .sim:fullscreen .panel, .sim.is-full .panel { max-height: none; }
+  .sim:fullscreen, .sim.is-full { grid-template-areas: "stage" "ctrl"; }
+  .sim:fullscreen .ctrl-box, .sim.is-full .ctrl-box { max-height: none; }
 }
 
 /* 森：机（背景）が暗い緑なので、紙の外の文字は明るく */
 :root[data-style="forest"] :is(.masthead, .foot, .count, .sim-group h2) { --ink: #f6f2e7; --muted: #c9d8bf; --accent: #c9e4a8; color: var(--ink); }
 :root[data-style="forest"] .masthead :is(select, input, .btn, .contact-link) { --ink: #23301f; --muted: #5d6a55; --accent: #3f6b3a; }
 :root[data-style="forest"] .sim:fullscreen, :root[data-style="forest"] .sim.is-full { background: #2f4a3a; }
-:root[data-style="dot"] :is(.finder, .card, .howto, .stage-box, .panel) {
+:root[data-style="dot"] :is(.finder, .card, .howto, .stage-box, .ctrl-box, .panel) {
   border-color: transparent;
   box-shadow: 0 -4px 0 0 var(--ink), 0 4px 0 0 var(--ink), -4px 0 0 0 var(--ink), 4px 0 0 0 var(--ink), 4px 8px 0 0 rgba(46,42,51,.25), 8px 4px 0 0 rgba(46,42,51,.25);
 }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
 @media print {
-  .toolbar, .steps, .controls, .mast-right, .bnav, .actions, .quiz { display: none !important; }
+  .toolbar, .steps, .ctrl-box, .more-btn, .drag-hint, .bnav, .actions, .quiz { display: none !important; }
   .stage-box { position: static; box-shadow: none; }
   .step[hidden] { display: grid !important; }
   .sim { grid-template-columns: 1fr; }
 }
+
+/* ===== 見やすく（2026-11-10）：スマホは説明の1行もけして、図と操作を上に ===== */
+@media (max-width: 599px) { .sim-title .lede { display: none; } }
+.controls .seg { gap: 4px; }
+.controls .seg button { padding: 4px 10px; min-height: 38px; font-size: 13px; flex: 1 1 auto; }
+/* 一覧：教科は1行（スマホは横にすべらせる）、細かいしぼりこみはたたむ */
+.finder { gap: 10px; }
+.finder .subj-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; }
+.finder .subj-tabs::-webkit-scrollbar { display: none; }
+.finder .subj-tabs button { flex: none; white-space: nowrap; }
+.finder .search { flex: none; }
+.more-filter > summary { cursor: pointer; font-size: 13px; font-weight: 700; color: var(--muted); padding: 2px 0; width: max-content; }
+.more-filter[open] > summary { margin-bottom: 8px; }
+.list-page .lede { font-size: 14px; }
