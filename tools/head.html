@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script>/* 引っ越し：chikokunn1011.github.io・chiko-studia.pages.dev → sapia.pages.dev（全サイト共通。直すときは全サイトそろえる）
+  古いURLで開いたら、端末に保存した記録（続きから・見た目・学習記録など）を持って新しいURLへ移る。
+  新しいURL側では受け取った記録を、まだないものだけ入れる。記録は # の後ろに入れるのでサーバーには送られない。 */
+(function () {
+  var NEW = 'https://sapia.pages.dev', K = '__move=', MAX = 1500000;
+  var OLD = ['chikokunn1011.github.io', 'chiko-studia.pages.dev'];
+  try {
+    if (OLD.indexOf(location.hostname) >= 0) {
+      if (window.top !== window) return;
+      var h = location.hash.slice(1), frag = h ? '#' + h : '';
+      try {
+        if (!localStorage.getItem('studia:moved')) {
+          var d = {}, n = 0;
+          for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); d[k] = localStorage.getItem(k); n++; }
+          var s = encodeURIComponent(JSON.stringify(d));
+          if (n && s.length < MAX) frag = '#' + K + s + (h ? '&h=' + encodeURIComponent(h) : '');
+          localStorage.setItem('studia:moved', String(Date.now()));
+        }
+      } catch (e) {}
+      location.replace(NEW + location.pathname + location.search + frag);
+    } else if (location.hash.indexOf('#' + K) === 0) {
+      // 受け取るのは引っ越し前のサイト（github.io・chiko-studia）から来たときだけ。よそのリンクから記録を書きこませない。
+      // 先生の鍵・ランキングの合言葉などは受け取らない（学習記録と設定だけ）。
+      var q = location.hash.slice(1 + K.length), a = q.indexOf('&h=');
+      var hh = a < 0 ? '' : decodeURIComponent(q.slice(a + 3));
+      history.replaceState(null, '', location.pathname + location.search + (hh ? '#' + hh : ''));
+      var ok = false;
+      for (var j = 0; j < OLD.length; j++) if (document.referrer.indexOf('https://' + OLD[j] + '/') === 0) ok = true;
+      if (!ok || q.length > MAX + 5000) return;
+      var o = JSON.parse(decodeURIComponent(a < 0 ? q : q.slice(0, a))), n = 0;
+      if (!o || typeof o !== 'object' || Array.isArray(o)) return;
+      for (var key in o) {
+        if (++n > 500) break;
+        var v = o[key];
+        if (typeof v !== 'string' || v.length > 500000 || key.length > 100) continue;
+        if (key === 'studia:moved' || /teacher|key|token|pass|secret|^pz:(me|run)$/i.test(key)) continue;
+        // 記録の中の古いURL（続きからなど）は新しいURLに直す
+        v = v.split('https://chiko-studia.pages.dev').join(NEW);
+        if (localStorage.getItem(key) === null) localStorage.setItem(key, v);
+      }
+    }
+  } catch (e) {}
+})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{TITLE}</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="{DESC}">
+<!-- LINE・SNS で送ったときのサムネイル（OGP） -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="SAPIA">
+<meta property="og:title" content="{OGTITLE}">
+<meta property="og:description" content="{DESC}">
+<meta property="og:url" content="https://sapia.pages.dev/simulator/">
+<meta property="og:image" content="https://sapia.pages.dev/simulator/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<!-- ホーム画面に追加したときのアイコンと名前 -->
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=202611101200">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=202611101200">
+<link rel="manifest" href="manifest.webmanifest?v=202611101200">
+<meta name="theme-color" content="#1c1846">
+<meta name="apple-mobile-web-app-title" content="シミュレーター">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script>
+// オフライン対応：一度開けば電波がなくても使える（sw.js）。ホーム画面から開くとアプリのように起動する
+(function () {
+  if (!('serviceWorker' in navigator) || !(location.protocol === 'https:' || location.hostname === 'localhost')) return;
+  if (performance.setResourceTimingBufferSize) performance.setResourceTimingBufferSize(2000);
+  addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').then(function () { return navigator.serviceWorker.ready; }).then(function (reg) {
+      var urls = [location.href].concat(performance.getEntriesByType('resource').map(function (e) { return e.name; }), []);
+      if (reg.active) reg.active.postMessage({ type: 'cache-urls', urls: urls });
+    }).catch(function () {});
+  });
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<script>
+// 見た目（スタイル）を最初の描画の前に当てる。書体はそのスタイルを選んだときだけ読みこむ
+window.ewStyle = function (st) {
+  var F = {
+    chalk: 'Klee+One:wght@400;600&family=Kalam:wght@400;700',
+    washi: 'Zen+Old+Mincho:wght@400;700&family=EB+Garamond:wght@500;600',
+    grid: 'IBM+Plex+Sans+JP:wght@400;700&family=Space+Grotesk:wght@500;600',
+    night: '',
+    sakura: 'Zen+Maru+Gothic:wght@500;700&family=Quicksand:wght@500;700',
+    kraft: 'Kosugi+Maru',
+    ocean: 'M+PLUS+1p:wght@400;700;800&family=Nunito:wght@600;800',
+    forest: 'Merriweather+Sans:wght@500;700',
+    retro: 'DotGothic16',
+    dot: 'DotGothic16'
+  };
+  if (!Object.prototype.hasOwnProperty.call(F, st)) { delete document.documentElement.dataset.style; return; }
+  document.documentElement.dataset.style = st;
+  if (F[st] && !document.getElementById('font-' + st)) {
+    var l = document.createElement('link'); l.rel = 'stylesheet'; l.id = 'font-' + st;
+    l.href = 'https://fonts.googleapis.com/css2?family=' + F[st] + '&display=swap';
+    document.head.appendChild(l);
+  }
+};
+try { window.ewStyle(JSON.parse(localStorage.getItem('ew:style'))); } catch (e) {}
+</script>

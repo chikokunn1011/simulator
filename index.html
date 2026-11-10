@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script>/* 引っ越し：chikokunn1011.github.io・chiko-studia.pages.dev → sapia.pages.dev（全サイト共通。直すときは全サイトそろえる）
+  古いURLで開いたら、端末に保存した記録（続きから・見た目・学習記録など）を持って新しいURLへ移る。
+  新しいURL側では受け取った記録を、まだないものだけ入れる。記録は # の後ろに入れるのでサーバーには送られない。 */
+(function () {
+  var NEW = 'https://sapia.pages.dev', K = '__move=', MAX = 1500000;
+  var OLD = ['chikokunn1011.github.io', 'chiko-studia.pages.dev'];
+  try {
+    if (OLD.indexOf(location.hostname) >= 0) {
+      if (window.top !== window) return;
+      var h = location.hash.slice(1), frag = h ? '#' + h : '';
+      try {
+        if (!localStorage.getItem('studia:moved')) {
+          var d = {}, n = 0;
+          for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); d[k] = localStorage.getItem(k); n++; }
+          var s = encodeURIComponent(JSON.stringify(d));
+          if (n && s.length < MAX) frag = '#' + K + s + (h ? '&h=' + encodeURIComponent(h) : '');
+          localStorage.setItem('studia:moved', String(Date.now()));
+        }
+      } catch (e) {}
+      location.replace(NEW + location.pathname + location.search + frag);
+    } else if (location.hash.indexOf('#' + K) === 0) {
+      // 受け取るのは引っ越し前のサイト（github.io・chiko-studia）から来たときだけ。よそのリンクから記録を書きこませない。
+      // 先生の鍵・ランキングの合言葉などは受け取らない（学習記録と設定だけ）。
+      var q = location.hash.slice(1 + K.length), a = q.indexOf('&h=');
+      var hh = a < 0 ? '' : decodeURIComponent(q.slice(a + 3));
+      history.replaceState(null, '', location.pathname + location.search + (hh ? '#' + hh : ''));
+      var ok = false;
+      for (var j = 0; j < OLD.length; j++) if (document.referrer.indexOf('https://' + OLD[j] + '/') === 0) ok = true;
+      if (!ok || q.length > MAX + 5000) return;
+      var o = JSON.parse(decodeURIComponent(a < 0 ? q : q.slice(0, a))), n = 0;
+      if (!o || typeof o !== 'object' || Array.isArray(o)) return;
+      for (var key in o) {
+        if (++n > 500) break;
+        var v = o[key];
+        if (typeof v !== 'string' || v.length > 500000 || key.length > 100) continue;
+        if (key === 'studia:moved' || /teacher|key|token|pass|secret|^pz:(me|run)$/i.test(key)) continue;
+        // 記録の中の古いURL（続きからなど）は新しいURLに直す
+        v = v.split('https://chiko-studia.pages.dev').join(NEW);
+        if (localStorage.getItem(key) === null) localStorage.setItem(key, v);
+      }
+    }
+  } catch (e) {}
+})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>数学・理科シミュレーター</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="数学・理科の現象を、値を動かしながら図とグラフで確かめるシミュレーター集。一次関数・二次関数、三角関数と単位円、等加速度運動、波の干渉、オームの法則など。">
+<!-- LINE・SNS で送ったときのサムネイル（OGP） -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="SAPIA">
+<meta property="og:title" content="数学・理科シミュレーター｜SAPIA">
+<meta property="og:description" content="数学・理科の現象を、値を動かしながら図とグラフで確かめるシミュレーター集。一次関数・二次関数、三角関数と単位円、等加速度運動、波の干渉、オームの法則など。">
+<meta property="og:url" content="https://sapia.pages.dev/simulator/">
+<meta property="og:image" content="https://sapia.pages.dev/simulator/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<!-- ホーム画面に追加したときのアイコンと名前 -->
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=202611101200">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=202611101200">
+<link rel="manifest" href="manifest.webmanifest?v=202611101200">
+<meta name="theme-color" content="#1c1846">
+<meta name="apple-mobile-web-app-title" content="シミュレーター">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script>
+// オフライン対応：一度開けば電波がなくても使える（sw.js）。ホーム画面から開くとアプリのように起動する
+(function () {
+  if (!('serviceWorker' in navigator) || !(location.protocol === 'https:' || location.hostname === 'localhost')) return;
+  if (performance.setResourceTimingBufferSize) performance.setResourceTimingBufferSize(2000);
+  addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').then(function () { return navigator.serviceWorker.ready; }).then(function (reg) {
+      var urls = [location.href].concat(performance.getEntriesByType('resource').map(function (e) { return e.name; }), []);
+      if (reg.active) reg.active.postMessage({ type: 'cache-urls', urls: urls });
+    }).catch(function () {});
+  });
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<script>
+// 見た目（スタイル）を最初の描画の前に当てる。書体はそのスタイルを選んだときだけ読みこむ
+window.ewStyle = function (st) {
+  var F = {
+    chalk: 'Klee+One:wght@400;600&family=Kalam:wght@400;700',
+    washi: 'Zen+Old+Mincho:wght@400;700&family=EB+Garamond:wght@500;600',
+    grid: 'IBM+Plex+Sans+JP:wght@400;700&family=Space+Grotesk:wght@500;600',
+    night: '',
+    sakura: 'Zen+Maru+Gothic:wght@500;700&family=Quicksand:wght@500;700',
+    kraft: 'Kosugi+Maru',
+    ocean: 'M+PLUS+1p:wght@400;700;800&family=Nunito:wght@600;800',
+    forest: 'Merriweather+Sans:wght@500;700',
+    retro: 'DotGothic16',
+    dot: 'DotGothic16'
+  };
+  if (!Object.prototype.hasOwnProperty.call(F, st)) { delete document.documentElement.dataset.style; return; }
+  document.documentElement.dataset.style = st;
+  if (F[st] && !document.getElementById('font-' + st)) {
+    var l = document.createElement('link'); l.rel = 'stylesheet'; l.id = 'font-' + st;
+    l.href = 'https://fonts.googleapis.com/css2?family=' + F[st] + '&display=swap';
+    document.head.appendChild(l);
+  }
+};
+try { window.ewStyle(JSON.parse(localStorage.getItem('ew:style'))); } catch (e) {}
+</script>
+<script src="mobile.js"></script>
+<script src="ui.js"></script>
+<link rel="stylesheet" href="style.css?v=202611101200">
+<link rel="stylesheet" href="theme.css">
+<script src="nav.js" defer></script>
+</head>
+<body class="list-page">
+<div class="page">
+  <header class="masthead">
+    <div class="brand">
+      <a class="home-link" href="/study/">← ホーム（SAPIA）</a>
+      <h1>数学・理科シミュレーター</h1>
+      <p class="lede">値を動かすと、図・グラフ・式がいっしょに変わる。見て、さわって、「なぜ？」までわかる教材 <b id="total">0</b> 本。</p>
+    </div>
+    <div class="mast-right">
+    <a class="contact-link" href="/study/contact.html?site=simulator">要望・不具合を送る</a>
+    <label class="style-pick"><span>見た目</span>
+      <select id="style">
+        <option value="note">ノート</option>
+        <option value="chalk">黒板</option>
+        <option value="washi">和紙</option>
+        <option value="grid">方眼</option>
+        <option value="night">夜</option>
+        <option value="sakura">さくら</option>
+        <option value="kraft">ふせん</option>
+        <option value="ocean">海</option>
+        <option value="forest">森</option>
+        <option value="retro">レトロゲーム</option>
+        <option value="dot">ドット</option>
+      </select>
+    </label>
+    </div>
+  </header>
+
+  <section class="finder" aria-label="教材をさがす">
+    <div class="seg subj-tabs" role="group" aria-label="教科" id="subj"></div>
+    <div class="finder-row">
+      <div class="seg" role="group" aria-label="学校段階" id="lv"></div>
+      <label class="unit-pick"><span class="label">単元</span>
+        <select id="unit"><option value="">すべての単元</option></select>
+      </label>
+      <label class="search"><span class="sr">キーワードでさがす</span>
+        <input id="q" type="search" placeholder="キーワード（例: 放物線 / 電流 / sin）" autocomplete="off">
+      </label>
+    </div>
+    <label class="switch small"><input type="checkbox" id="soon"><span>準備中の教材も表示</span></label>
+  </section>
+
+  <p class="count" id="count" aria-live="polite"></p>
+  <div id="list" class="sim-groups"></div>
+  <p class="empty" id="empty" hidden>見つからなかった。教科・学校段階・単元・キーワードを見直してみて。</p>
+
+  <section class="howto">
+    <h2>使い方</h2>
+    <ol>
+      <li><b>STEP 1 知る</b>：何を調べる教材かを短く読む。</li>
+      <li><b>STEP 2 動かす</b>：スライダーや数の入力で値を変えて、図・グラフ・式の変化を見る。「代表的な条件」ですぐに試せる。</li>
+      <li><b>STEP 3 なぜ？</b>：今の値を使った説明で、そうなる理由を確かめる。</li>
+      <li><b>STEP 4 確認問題</b>：今の設定から作った問題で、わかったかを確かめる。</li>
+    </ol>
+    <p class="hint">授業では「全画面」でプロジェクターに大きく映せる。「この設定のURLをコピー」で、同じ条件のページを配れる。</p>
+  </section>
+
+  <footer class="foot">
+    <p>計算と描画はすべてこの端末の中で行う（ログイン・データの送信はなし）。図は見やすさのために実際の大きさと変えているところがある。各教材の「このモデルの約束」を見てね。</p>
+  </footer>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<script src="catalog.js?v=202611101200"></script>
+<script src="app.js?v=202611101200"></script>
+</body>
+</html>

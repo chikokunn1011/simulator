@@ -1,0 +1,25 @@
+# main が更新されたら、学習ノート（Cloudflare Pages）の公開を study リポジトリに頼む
+# 必要な Secret: STUDIA_TOKEN（study の cloudflare.yml と同じトークン）。未登録なら何もしない
+name: 学習ノート（Cloudflare）に反映
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: study の公開ワークフローを動かす
+        env:
+          T: ${{ secrets.STUDIA_TOKEN }}
+        run: |
+          if [ -z "$T" ]; then echo "STUDIA_TOKEN が未登録なのでスキップ"; exit 0; fi
+          curl -fsS -X POST \
+            -H "Authorization: Bearer $T" -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/chikokunn1011/study/actions/workflows/cloudflare.yml/dispatches \
+            -d '{"ref":"main"}'
+          echo "study に公開を頼んだ"
