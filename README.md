@@ -21,7 +21,7 @@
 | `test/<id>.test.js` | 計算のテスト |
 | `tools/serve.sh` | 手元で共通部品を入れて開く（`bash tools/serve.sh` → http://localhost:8765/simulator/） |
 | `tools/shot.js` | 画面写真を撮る（Playwright） |
-| `tools/qa.js` | 教材を自動で操作して確かめる（`node tools/qa.js functions`） |
+| `tools/qa.js` | 教材を自動で操作して確かめる（`node tools/qa.js parabola`） |
 | `tools/drag-test.js` | 関数の教材で、指・マウスで点を動かせるかを確かめる |
 
 ## 教材の足し方
@@ -41,3 +41,7 @@
 - 色だけで区別しない（線の種類・点の形・文字も変える）。動きを減らす設定（studyStill）では自動で動かさない。
 - 説明は短く。図を直接さわれるところは、さわれるようにする（つかめる点は `grip: true` で輪をかく）。
 - 画面の文はタメ口。「塾」という言葉は使わない。外部ライブラリ・外部通信なし（CSP で eval も使えない）。
+
+## 1ファイルで何個かの教材を作る
+
+`catalog.js` に `file: 'functions'` と書くと、`sims/functions.js`・`lib/functions.js` を読む。一次関数（linear）・関数 y = ax²（parabola）・二次関数（quadratic）はこの形。前の `s=functions` の URL は `core/load.js` が新しい3つへ送る。
