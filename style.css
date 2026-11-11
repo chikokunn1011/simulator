@@ -503,3 +503,41 @@ html.sim-full .bnav { display: none !important; }
 .more-filter > summary { cursor: pointer; font-size: 13px; font-weight: 700; color: var(--muted); padding: 2px 0; width: max-content; }
 .more-filter[open] > summary { margin-bottom: 8px; }
 .list-page .lede { font-size: 14px; }
+
+/* ===== スマホで見やすく・さわりやすく（2026-11-11） ===== */
+/* −・＋ボタン（スライダーでは合わせにくい値を1きざみずつ） */
+.nudge { flex: none; width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--rule); background: var(--paper); color: var(--ink); font-size: 20px; font-weight: 700; line-height: 1; cursor: pointer; touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+.nudge:hover { border-color: var(--accent); color: var(--accent); }
+.nudge:active { background: color-mix(in srgb, var(--accent) 16%, var(--paper)); }
+.controls .param input.num { text-align: center; }
+@media (max-width: 899px) {
+  /* 値を変える所：名前を上、その下にスライダーと −［数］＋。スライダーを画面いっぱいに使う */
+  .controls .param { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "label label" "slider num"; gap: 2px 10px; padding: 8px 10px; background: var(--desk); border-radius: 12px; }
+  .controls .param > .label { grid-area: label; font-size: 14px; font-weight: 700; color: var(--ink); }
+  .controls .param > .slider { grid-area: slider; height: 44px; }
+  .controls .param > .num-wrap { grid-area: num; }
+  .nudge { width: 44px; height: 44px; font-size: 22px; }
+  .controls .param input.num { width: 3.6em; min-height: 44px; font-size: 17px; font-weight: 700; }
+  input.slider::-webkit-slider-thumb { width: 32px; height: 32px; margin-top: -12px; }
+  input.slider::-moz-range-thumb { width: 28px; height: 28px; }
+  .toggles .switch { min-height: 42px; font-size: 14px; padding: 2px 14px 2px 10px; }
+  .toggles .switch input { width: 18px; height: 18px; }
+  /* 「指で動かせる」は図のじゃまにならないよう、下のはしに小さく */
+  .drag-hint { top: auto; bottom: 6px; font-size: 12px; padding: 4px 12px; opacity: .92; animation: none; }
+}
+@media (max-width: 899px) and (min-height: 560px) {
+  /* 図を大きく（前は画面の30%で、放物線がつぶれて見えた） */
+  .stage { --stage-h: clamp(230px, 40vh, 420px); }
+  html.stage-small .stage { --stage-h: clamp(140px, 22vh, 220px); }
+  .formula { font-size: 18px; }
+  .stage-box .toolbar { gap: 4px; }
+  .stage-box .tb { min-height: 36px; min-width: 36px; }
+}
+@media (max-width: 899px) and (min-height: 560px) {
+  /* 再生ボタンのない教材：拡大・縮小などのボタンを図の下のはしに重ねて、その分だけ操作パネルを上に出す */
+  .sim-body:not(.animated) .stage-box .toolbar { margin-top: -48px; position: relative; z-index: 3; padding: 0 6px 6px; pointer-events: none; }
+  .sim-body:not(.animated) .stage-box .toolbar > * { pointer-events: auto; }
+  .sim-body:not(.animated) .stage-box .tb { background: color-mix(in srgb, var(--paper) 88%, transparent); box-shadow: 0 1px 4px rgba(0, 0, 0, .18); }
+  .sim-body:not(.animated) .drag-hint { bottom: 52px; }
+}
+@media (max-width: 899px) and (min-height: 560px) and (max-height: 720px) { .stage { --stage-h: clamp(210px, 34vh, 300px); } }

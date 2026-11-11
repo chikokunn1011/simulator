@@ -10,7 +10,8 @@
     minutes:  15,                        // 所要時間の目安（分）
     keywords: ['傾き', '切片'],          // キーワード検索に使う（画面には出ない）
     status:   'open',                    // 'open' = 公開中 / 'soon' = 準備中（リンクなし）
-    lib:      true                       // （なくてOK）true = lib/<id>.js（計算の部分）も読む
+    lib:      true,                      // （なくてOK）true = lib/<id>.js（計算の部分）も読む
+    file:     'functions'                // （なくてOK）sims/・lib/ のファイル名が id とちがうとき（1ファイルで何個かの教材を作るとき）
   }
 */
 window.SIM_SUBJECTS = {
@@ -22,10 +23,21 @@ window.SIM_SUBJECTS = {
 
 window.SIMS = [
   // ---------- 数学 ----------
-  { id: 'functions', title: '一次関数・二次関数', subject: '数学', unit: '関数', grades: '中2〜高1', levels: ['中学', '高校'],
-    desc: 'y = ax + b の傾きと切片、y = ax² + bx + c の係数を動かして、グラフ・頂点・軸・x 軸との交点がどう変わるかを見る。',
-    lede: '係数を動かすと、グラフと式がいっしょに変わる。傾き・切片・頂点・軸・x 軸との交点の関係を見てみよう。',
-    minutes: 15, keywords: ['一次関数', '二次関数', '傾き', '切片', '変化の割合', '放物線', '頂点', '軸', '判別式', '平方完成', 'グラフ', 'y=ax+b', 'y=ax²'],
+  // 関数の3つは sims/functions.js・lib/functions.js を共通で使う（file: 'functions'）
+  { id: 'linear', file: 'functions', title: '一次関数', subject: '数学', unit: '関数', grades: '中2', levels: ['中学'],
+    desc: 'y = ax + b の傾きと切片を動かして、グラフ・変化の割合・x 軸との交点がどう変わるかを見る。',
+    lede: '傾き a と切片 b を動かすと、直線と式がいっしょに変わる。',
+    minutes: 10, keywords: ['一次関数', '傾き', '切片', '変化の割合', '直線', 'グラフ', 'y=ax+b', '比例'],
+    status: 'open', lib: true },
+  { id: 'parabola', file: 'functions', title: '関数 y = ax²', subject: '数学', unit: '関数', grades: '中3', levels: ['中学'],
+    desc: 'y = ax² の a を動かして、グラフの開き方・向き・変化の割合・変域を見る。',
+    lede: 'a を動かすと、放物線の開き方と向きが変わる。変化の割合と変域も見てみよう。',
+    minutes: 10, keywords: ['関数', 'y=ax²', '2乗に比例', '比例定数', '放物線', '変化の割合', '変域', 'グラフ', '二次関数'],
+    status: 'open', lib: true },
+  { id: 'quadratic', file: 'functions', title: '二次関数', subject: '数学', unit: '関数', grades: '高1', levels: ['高校'],
+    desc: 'y = ax² + bx + c の係数を動かして、頂点・軸・x 軸との共有点・判別式がどう変わるかを見る。',
+    lede: '係数を動かすと、頂点・軸・x 軸との共有点がいっしょに変わる。',
+    minutes: 15, keywords: ['二次関数', '放物線', '頂点', '軸', '判別式', '平方完成', '最大', '最小', 'グラフ', '数学Ⅰ'],
     status: 'open', lib: true },
   { id: 'trig', title: '三角関数と単位円', subject: '数学', unit: '三角関数', grades: '高1〜高2', levels: ['高校'],
     desc: '単位円の上を点が回ると、sin・cos・tan のグラフがどう描かれるかを連動して見る。角度は度・ラジアンで切りかえ。',

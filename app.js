@@ -113,8 +113,12 @@
     const sv = (inner) => '<svg viewBox="0 0 300 108" preserveAspectRatio="xMidYMid slice">' + inner + '</svg>';
     const ax = '<path d="M20 74H280M150 10V100" stroke="var(--muted)" stroke-width="1.5" opacity=".6"/>';
     switch (s.id) {
-      case 'functions':
-        return sv(ax + '<path d="M70 104 Q150 -30 230 104" fill="none" stroke="var(--c1)" stroke-width="4"/><path d="M40 100 L260 20" stroke="var(--c2)" stroke-width="3.5" stroke-dasharray="10 6"/><circle cx="150" cy="37" r="6" fill="var(--c1)"/>');
+      case 'linear':
+        return sv(ax + '<path d="M40 100 L260 14" stroke="var(--c1)" stroke-width="4"/><circle cx="150" cy="57" r="6" fill="var(--c2)"/><path d="M175 47 H215 V32" fill="none" stroke="var(--c2)" stroke-width="2.5" stroke-dasharray="5 4"/>');
+      case 'parabola':
+        return sv(ax + '<path d="M86 6 Q150 142 214 6" fill="none" stroke="var(--c1)" stroke-width="4"/><path d="M40 6 Q150 142 260 6" fill="none" stroke="var(--c2)" stroke-width="3" stroke-dasharray="8 6"/><circle cx="150" cy="74" r="6" fill="var(--c1)"/>');
+      case 'quadratic':
+        return sv(ax + '<path d="M96 4 Q170 170 244 4" fill="none" stroke="var(--c1)" stroke-width="4"/><path d="M170 10V100" stroke="var(--c2)" stroke-width="2.5" stroke-dasharray="7 5"/><circle cx="170" cy="87" r="6" fill="var(--c2)"/>');
       case 'trig': {
         let d = 'M150 54'; for (let i = 0; i <= 120; i++) { const x = 150 + i, y = 54 - 32 * Math.sin(i / 120 * Math.PI * 2); d += ' L' + x + ' ' + y.toFixed(1); }
         return sv('<circle cx="80" cy="54" r="32" fill="none" stroke="var(--muted)" stroke-width="2"/><path d="M40 54H280M80 14V94" stroke="var(--muted)" stroke-width="1.2" opacity=".6"/><path d="M80 54 L102.6 31.4" stroke="var(--c1)" stroke-width="3"/><circle cx="102.6" cy="31.4" r="6" fill="var(--c2)"/><path d="M102.6 31.4H150" stroke="var(--c2)" stroke-dasharray="4 4" stroke-width="2"/><path d="' + d + '" fill="none" stroke="var(--c2)" stroke-width="3.5"/>');

@@ -1,4 +1,5 @@
-/* 一次関数・二次関数 */
+/* 一次関数（linear）・関数 y = ax²（parabola）・二次関数（quadratic）。3つの教材をこの1ファイルで作る（catalog.js の file: 'functions'）。
+   どれを作るかは sim.html?s=<id> の id（core/load.js が body[data-sim] に入れる）で決める */
 (function () {
   'use strict';
   const L = window.SimLib.functions;
@@ -38,47 +39,106 @@
   }
 
   let plot, cv, S0;
-  const isQuad = (s) => s.mode === 'quad';
+  const KIND = { linear: 'linear', parabola: 'parabola', quadratic: 'quadratic' }[document.body.dataset.sim] || 'linear';
+  const PARA = KIND === 'parabola';      // 中3：y = ax²（b・c はいつも 0。頂点・軸・判別式は出さない）
+  const isQuad = () => KIND !== 'linear';
+  const V = (t) => '<i class="v">' + t + '</i>';
+  // 変域（lo ≦ x ≦ hi のときの y の範囲）
+  function domain(s) {
+    const lo = Math.min(s.x1, s.x2), hi = Math.max(s.x1, s.x2);
+    const ys = [s.a * lo * lo, s.a * hi * hi];
+    if (lo <= 0 && hi >= 0) ys.push(0);
+    return { lo, hi, ymin: L.tidy(Math.min.apply(null, ys)), ymax: L.tidy(Math.max.apply(null, ys)) };
+  }
+  const span = (lo, v, hi, html) => (html ? nf(lo).html : nf(lo).text) + ' ≦ ' + v + ' ≦ ' + (html ? nf(hi).html : nf(hi).text);
+
+  const P_A = { key: 'a', label: V('a'), min: -5, max: 5, step: 0.1, value: 2, digits: 1 };
+  const P_X0 = { key: 'x0', label: '点 P の ' + V('x'), min: -10, max: 10, step: 0.1, value: 1, digits: 1 };
+  const P_DX = { key: 'dx', label: V('x') + ' の増加量', min: 0.5, max: 6, step: 0.5, value: 2, digits: 1, show: (s) => s.rate };
+  const T_RATE = { key: 'rate', label: '変化の割合', value: false };
+  const T_GRID = { key: 'grid', label: '方眼', value: true };
+  const KINDS = {
+    linear: {
+      dragHint: '点 P と切片を指で動かせる',
+      intro:
+        '<p><b>一次関数</b> ' + V('y') + ' = ' + V('ax') + ' + ' + V('b') + ' のグラフは直線になる。</p>' +
+        '<p>' + V('a') + '（傾き）と ' + V('b') + '（切片）を変えると、グラフはどう動く？ 式のどこにグラフの形が表れているかを見つけよう。</p>',
+      assumptions: [
+        'グラフは ' + V('x') + ' と ' + V('y') + ' の目もり 1 の長さを同じにしてかいている（傾きの見た目がそのまま正しい）。',
+        '分数で書ける値は分数で、割り切れない値は小数第2位までの近い値（≒）で出している。',
+        V('a') + ' = 0 のときは ' + V('x') + ' 軸に平行な直線になる。'
+      ],
+      params: [Object.assign({}, P_A, { label: V('a') + '（傾き）' }),
+        { key: 'b', label: V('b') + '（切片）', min: -10, max: 10, step: 0.1, value: 1, digits: 1 }, P_X0, P_DX],
+      toggles: [{ key: 'keys', label: '切片・交点', value: true }, T_RATE, { key: 'base', label: 'y = x を重ねる', value: false }, T_GRID],
+      presets: [
+        { label: 'y = 2x + 1', values: { a: 2, b: 1 } },
+        { label: 'y = −x + 3', values: { a: -1, b: 3 } },
+        { label: 'y = 0.5x − 2', values: { a: 0.5, b: -2 } },
+        { label: 'y = 3x（比例）', values: { a: 3, b: 0 } }
+      ]
+    },
+    parabola: {
+      dragHint: '点 P を指で動かせる',
+      intro:
+        '<p><b>関数 ' + V('y') + ' = ' + V('ax') + '²</b>（' + V('y') + ' は ' + V('x') + ' の 2 乗に比例する）のグラフは、原点を通る<b>放物線</b>になる。</p>' +
+        '<p>' + V('a') + '（比例定数）を変えると、グラフの開き方と向きが変わる。' + V('a') + ' を動かして確かめよう。</p>',
+      assumptions: [
+        'グラフは ' + V('x') + ' と ' + V('y') + ' の目もり 1 の長さを同じにしてかいている。',
+        '分数で書ける値は分数で、割り切れない値は小数第2位までの近い値（≒）で出している。',
+        V('a') + ' = 0 のときは ' + V('y') + ' = 0（' + V('x') + ' 軸）になり、' + V('y') + ' = ' + V('ax') + '² の関数ではなくなる。'
+      ],
+      params: [Object.assign({}, P_A, { label: V('a') + '（比例定数）', value: 1 }),
+        // b・c は使わない（いつも 0）。計算の部分を二次関数と共通にするために置いてある
+        { key: 'b', label: 'b', min: 0, max: 0, step: 1, value: 0, digits: 0, show: () => false },
+        { key: 'c', label: 'c', min: 0, max: 0, step: 1, value: 0, digits: 0, show: () => false },
+        P_X0, P_DX,
+        { key: 'x1', label: V('x') + ' の変域（左はし）', min: -6, max: 6, step: 0.5, value: -1, digits: 1, show: (s) => s.dom },
+        { key: 'x2', label: V('x') + ' の変域（右はし）', min: -6, max: 6, step: 0.5, value: 2, digits: 1, show: (s) => s.dom }],
+      toggles: [{ key: 'dom', label: '変域', value: false }, T_RATE, { key: 'base', label: 'y = x² を重ねる', value: false }, T_GRID],
+      presets: [
+        { label: 'y = x²', values: { a: 1 } },
+        { label: 'y = 2x²', values: { a: 2 } },
+        { label: 'y = 0.5x²', values: { a: 0.5 } },
+        { label: 'y = −x²', values: { a: -1 } },
+        { label: 'y = −2x²', values: { a: -2 } }
+      ]
+    },
+    quadratic: {
+      dragHint: '点 P と頂点を指で動かせる',
+      intro:
+        '<p><b>二次関数</b> ' + V('y') + ' = ' + V('ax') + '² + ' + V('bx') + ' + ' + V('c') + ' のグラフは放物線になる。</p>' +
+        '<p>係数を変えると、頂点・軸・' + V('x') + ' 軸との共有点はどう動く？ 式のどこに表れているかを見つけよう。</p>' +
+        '<p class="hint">中3 の ' + V('y') + ' = ' + V('ax') + '² は、別の教材「関数 y = ax²」にある。</p>',
+      assumptions: [
+        'グラフは ' + V('x') + ' と ' + V('y') + ' の目もり 1 の長さを同じにしてかいている。',
+        '分数で書ける値は分数で、割り切れない値は小数第2位までの近い値（≒）で出している。',
+        V('a') + ' = 0 のときは二次関数ではなくなる（一次関数になる）。'
+      ],
+      params: [Object.assign({}, P_A, { label: V('a') + '（' + V('x') + '² の係数）', value: 1 }),
+        { key: 'b', label: V('b') + '（' + V('x') + ' の係数）', min: -10, max: 10, step: 0.1, value: -2, digits: 1 },
+        { key: 'c', label: V('c') + '（定数項）', min: -10, max: 10, step: 0.1, value: -3, digits: 1 }, Object.assign({}, P_X0, { value: 2 }), P_DX],
+      toggles: [{ key: 'keys', label: '頂点・軸・交点', value: true }, T_RATE, { key: 'base', label: 'y = x² を重ねる', value: false }, T_GRID],
+      presets: [
+        { label: 'y = x² − 2x − 3', values: { a: 1, b: -2, c: -3 } },
+        { label: 'y = −x² + 4x', values: { a: -1, b: 4, c: 0 } },
+        { label: 'y = x² + 4x + 4（重解）', values: { a: 1, b: 4, c: 4 } },
+        { label: 'y = x² + 1（交点なし）', values: { a: 1, b: 0, c: 1 } },
+        { label: 'y = 2x² − 8', values: { a: 2, b: 0, c: -8 } }
+      ]
+    }
+  };
+  const K = KINDS[KIND];
 
   window.SimApp.register({
-    id: 'functions',
+    id: KIND,
     zoom: true,
-    dragHint: '点（P・切片・頂点）を指で動かせる',
-    intro:
-      '<p><b>一次関数</b> <i class="v">y</i> = <i class="v">ax</i> + <i class="v">b</i> のグラフは直線、<b>二次関数</b> <i class="v">y</i> = <i class="v">ax</i>² + <i class="v">bx</i> + <i class="v">c</i> のグラフは放物線になる。</p>' +
-      '<p>式の中の数（係数）を変えると、グラフはどう動く？ 傾き・切片・頂点・軸・<i class="v">x</i> 軸との交点が、式のどこに表れているかを見つけよう。</p>' +
-      '<p class="hint">中学（中2 一次関数・中3 <i class="v">y</i> = <i class="v">ax</i>²）は「一次関数」と、二次関数で <i class="v">b</i> = <i class="v">c</i> = 0 のとき。高校（数学Ⅰ）は二次関数の全部。</p>',
-    assumptions: [
-      'グラフは <i class="v">x</i> と <i class="v">y</i> の目もり 1 の長さを同じにしてかいている（傾きの見た目がそのまま正しい）。',
-      '分数で書ける値は分数で、割り切れない値は小数第2位までの近い値（≒）で出している。',
-      '<i class="v">a</i> = 0 のとき、一次関数は <i class="v">x</i> 軸に平行な直線（定数）、二次関数の式は二次関数ではなくなる（一次関数になる）。'
-    ],
-    choices: [{ key: 'mode', label: '関数', options: [['lin', '一次関数 y = ax + b'], ['quad', '二次関数 y = ax² + bx + c']], value: 'lin' }],
-    params: [
-      { key: 'a', label: '<i class="v">a</i>', min: -5, max: 5, step: 0.1, value: 2, digits: 1,
-        labelOf: (s) => isQuad(s) ? '<i class="v">a</i>（<i class="v">x</i>² の係数）' : '<i class="v">a</i>（傾き）' },
-      { key: 'b', label: '<i class="v">b</i>', min: -10, max: 10, step: 0.1, value: 1, digits: 1,
-        labelOf: (s) => isQuad(s) ? '<i class="v">b</i>（<i class="v">x</i> の係数）' : '<i class="v">b</i>（切片）' },
-      { key: 'c', label: '<i class="v">c</i>（定数項）', min: -10, max: 10, step: 0.1, value: 0, digits: 1, show: isQuad },
-      { key: 'x0', label: '点 P の <i class="v">x</i>', min: -10, max: 10, step: 0.1, value: 1, digits: 1 },
-      { key: 'dx', label: '<i class="v">x</i> の増加量', min: 0.5, max: 6, step: 0.5, value: 2, digits: 1, show: (s) => s.rate }
-    ],
-    toggles: [
-      { key: 'keys', label: '頂点・軸・交点', value: true },
-      { key: 'rate', label: '変化の割合', value: false },
-      { key: 'base', label: '基本のグラフ（y = x / y = x²）を重ねる', value: false },
-      { key: 'grid', label: '方眼', value: true }
-    ],
-    presets: [
-      { label: 'y = 2x + 1', values: { mode: 'lin', a: 2, b: 1 } },
-      { label: 'y = −x + 3', values: { mode: 'lin', a: -1, b: 3 } },
-      { label: 'y = 0.5x − 2', values: { mode: 'lin', a: 0.5, b: -2 } },
-      { label: 'y = x²', values: { mode: 'quad', a: 1, b: 0, c: 0 } },
-      { label: 'y = −2x²', values: { mode: 'quad', a: -2, b: 0, c: 0 } },
-      { label: 'y = x² − 2x − 3', values: { mode: 'quad', a: 1, b: -2, c: -3 } },
-      { label: 'y = x² + 4x + 4（重解）', values: { mode: 'quad', a: 1, b: 4, c: 4 } },
-      { label: 'y = x² + 1（交点なし）', values: { mode: 'quad', a: 1, b: 0, c: 1 } }
-    ],
+    dragHint: K.dragHint,
+    intro: K.intro,
+    assumptions: K.assumptions,
+    params: K.params,
+    toggles: K.toggles,
+    presets: K.presets,
 
     init(api) {
       S0 = api.S;
@@ -88,7 +148,7 @@
       plot = new window.SimPlot(cv, { xmin: -10, xmax: 10, ymin: -10, ymax: 10, equal: true, xlabel: 'x', ylabel: 'y' });
       api.plots.push(plot);
       // スマホの幅では少し拡大して始める（縮小ボタンで広く見られる）
-      if (cv.clientWidth < 520) plot.setHome({ xmin: -7, xmax: 7, ymin: -7, ymax: 7 });
+      if (cv.clientWidth < 520) plot.setHome({ xmin: -6, xmax: 6, ymin: -6, ymax: 6 });
       // 指・マウスで直接さわる：
       //   ・点 P をつかむ → グラフにそって動かす（x 座標）
       //   ・切片（一次関数）をつかむ → 上下に動かして b を変える
@@ -104,7 +164,7 @@
         const R = touch ? 26 : 16, f = curF(S0), cand = [];
         cand.push(['p', plot.X(S0.x0), plot.Y(f(S0.x0))]);
         if (!S0.keys) { /* 切片・頂点をかいていないときはつかめない */ } else if (!isQuad(S0)) cand.push(['b', plot.X(0), plot.Y(S0.b)]);
-        else { const Q = L.quadratic(S0.a, S0.b, S0.c); if (!Q.degenerate) cand.push(['v', plot.X(Q.p), plot.Y(Q.q)]); }
+        else if (!PARA) { const Q = L.quadratic(S0.a, S0.b, S0.c); if (!Q.degenerate) cand.push(['v', plot.X(Q.p), plot.Y(Q.q)]); }
         let best = null, bd = R;
         cand.forEach((c) => { const d = Math.hypot(x - c[1], y - c[2]); if (d <= bd) { bd = d; best = c[0]; } });
         return best;
@@ -193,6 +253,22 @@
       }
       // 本体
       plot.fn(f, { color: C.c1, width: 3.2 });
+      // 変域（y = ax²）：x の範囲と、そのときの y の範囲を軸の上に太くかく
+      if (PARA && s.dom) {
+        const d = domain(s), pts = [];
+        for (let i = 0; i <= 60; i++) { const x = d.lo + (d.hi - d.lo) * i / 60; pts.push([x, f(x)]); }
+        [d.lo, d.hi].forEach((x) => {
+          plot.seg(x, 0, x, f(x), { color: C.muted, width: 1.4, dash: [4, 4] });
+          plot.seg(0, f(x), x, f(x), { color: C.muted, width: 1.4, dash: [4, 4] });
+        });
+        if (d.hi > d.lo) plot.path(pts, { color: C.c1, width: 7 });
+        plot.seg(d.lo, 0, d.hi, 0, { color: C.c3, width: 6 });
+        plot.seg(0, d.ymin, 0, d.ymax, { color: C.c4, width: 6 });
+        plot.point(d.lo, f(d.lo), { color: C.c1, r: 4.5 });
+        plot.point(d.hi, f(d.hi), { color: C.c1, r: 4.5 });
+        plot.label(span(d.lo, 'x', d.hi), (d.lo + d.hi) / 2, 0, { color: C.c3, pos: s.a >= 0 ? 's' : 'n', size: 12, bold: true });
+        plot.label(span(d.ymin, 'y', d.ymax), 0, (d.ymin + d.ymax) / 2, { color: C.c4, pos: (d.lo + d.hi) / 2 > 0 ? 'w' : 'e', size: 12, bold: true });
+      }
       // 変化の割合（P から dx 進む）
       if (s.rate) {
         const x1 = s.x0, x2 = s.x0 + s.dx, y1 = f(x1), y2 = f(x2);
@@ -209,14 +285,15 @@
           plot.point(0, Li.b, { color: C.c2, shape: 'diamond', grip: true, label: '切片 (0, ' + fmt(Li.b, 1) + ')', pos: s.a >= 0 ? 'nw' : 'ne' });
           if (typeof Li.xInt === 'number') plot.point(Li.xInt, 0, { color: C.c3, shape: 'square', label: '(' + nf(Li.xInt).text + ', 0)', pos: s.a >= 0 ? 'se' : 'sw' });
         } else if (!Q.degenerate) {
-          plot.point(Q.p, Q.q, { color: C.c4, shape: 'diamond', r: 6, grip: true, label: '頂点 ' + coordT(Q.p, Q.q), pos: Q.a > 0 ? 's' : 'n' });
-          Q.roots.forEach((r, i) => plot.point(r, 0, { color: C.c3, shape: 'square', label: Q.roots.length === 1 ? '接点 (' + nf(r).text + ', 0)' : '(' + nf(r).text + ', 0)', pos: i === 0 && Q.roots.length > 1 ? 'sw' : 'se' }));
+          plot.point(Q.p, Q.q, { color: C.c4, shape: 'diamond', r: 6, grip: true, label: (Q.roots.length === 1 ? '頂点（接点）' : '頂点 ') + coordT(Q.p, Q.q), pos: Q.a > 0 ? 's' : 'n' });
+          // 接するとき（共有点1個）は頂点と同じ点なので、頂点の文字だけにする
+          if (Q.roots.length === 2) Q.roots.forEach((r, i) => plot.point(r, 0, { color: C.c3, shape: 'square', label: '(' + nf(r).text + ', 0)', pos: i === 0 ? 'sw' : 'se' }));
           if (Q.p !== 0) plot.point(0, Q.c, { color: C.c2, r: 4, shape: 'ring' });
         }
       }
       // 点 P
       const y0 = f(s.x0);
-      plot.point(s.x0, y0, { color: C.c2, r: 7, grip: true, label: 'P' + coordT(s.x0, y0), pos: (quad ? Q.a : s.a) >= 0 ? 'nw' : 'ne' });
+      plot.point(s.x0, y0, { color: C.c2, r: 7, grip: true, label: 'P' + coordT(s.x0, y0), pos: quad ? (s.x0 >= (Q.degenerate ? 0 : Q.p) ? (Q.a >= 0 ? 'se' : 'ne') : (Q.a >= 0 ? 'sw' : 'nw')) : s.a >= 0 ? 'nw' : 'ne' });
       cv.setAttribute('aria-label', 'グラフ：' + (quad ? quadEq(s.a, s.b, s.c) : linEq(s.a, s.b)).replace(/<[^>]+>/g, '') + '。点P ' + coordT(s.x0, y0));
     },
 
@@ -226,6 +303,7 @@
         return linEq(s.a, s.b) + sub;
       }
       const Q = L.quadratic(s.a, s.b, s.c);
+      if (PARA) return (s.a === 0 ? '<i class="v">y</i> = 0' : quadEq(s.a, 0, 0)) + (s.a === 0 ? '<span class="sub">a = 0 だと x 軸になる（y = ax² では a は 0 以外）</span>' : '');
       if (Q.degenerate) return quadEq(s.a, s.b, s.c) + '<span class="sub">a = 0 なので二次関数ではない（' + linEq(s.b, s.c).replace(/<[^>]+>/g, '') + ' の直線になる）</span>';
       return quadEq(s.a, s.b, s.c) + '<span class="sub">' + vertexEq(Q) + '（頂点の形）</span>';
     },
@@ -244,6 +322,12 @@
         ];
       }
       const Q = L.quadratic(s.a, s.b, s.c);
+      if (PARA) {
+        const out = [['比例定数 a', fmt(s.a, 1)], ['グラフ', s.a > 0 ? '上に開く（∪）' : s.a < 0 ? '下に開く（∩）' : 'x 軸'], P];
+        if (s.rate) out.push(['変化の割合', nf(L.avgRate(f, s.x0, s.x0 + s.dx)).html]);
+        if (s.dom) { const d = domain(s); out.push(['x の変域', span(d.lo, 'x', d.hi, true)], ['y の変域', span(d.ymin, 'y', d.ymax, true)]); }
+        return out;
+      }
       if (Q.degenerate) return [['頂点', 'なし（直線）'], ['y 軸との交点', '(0, ' + fmt(s.c, 1) + ')'], P];
       const nR = Q.roots.length;
       return [
@@ -259,13 +343,14 @@
 
     explain(s) {
       if (!isQuad(s)) return explainLin(s);
+      if (PARA) return explainPara(s);
       const Q = L.quadratic(s.a, s.b, s.c);
       if (Q.degenerate) return '<p class="now">今は <i class="v">a</i> = 0 なので、式は ' + linEq(s.b, s.c) + ' という一次関数（直線）。二次関数の説明は <i class="v">a</i> を 0 以外にして見てね。</p>' + explainLinCore(s.b, s.c);
       return explainQuad(Q, s);
     },
 
     quiz(s) {
-      return isQuad(s) ? quizQuad(s) : quizLin(s);
+      return PARA ? quizPara(s) : isQuad(s) ? quizQuad(s) : quizLin(s);
     }
   });
 
@@ -305,12 +390,69 @@
         D === 0 ? '<i class="v">D</i> = 0 なので <i class="v">x</i> 軸に接する（重解 <i class="v">x</i> = ' + nf(Q.p).html + '）。' :
           '<i class="v">D</i> &lt; 0 なので <i class="v">x</i> 軸と共有点をもたない。') + '</p>';
     h += '<p>頂点の <i class="v">y</i> 座標は <i class="v">q</i> = ' + frac(MINUS + '<i class="v">D</i>', '4<i class="v">a</i>') + '。だから「下に凸で頂点が <i class="v">x</i> 軸より下（<i class="v">q</i> &lt; 0）」のとき、ちょうど <i class="v">D</i> &gt; 0 になる。図で頂点の位置と共有点の数を見比べてみよう。</p>';
-    if (b === 0 && c === 0) h += '<p class="hint">中3 の <i class="v">y</i> = <i class="v">ax</i>² は、この <i class="v">b</i> = <i class="v">c</i> = 0 の場合。頂点は原点、軸は <i class="v">y</i> 軸。</p>';
     h += '<h3>変化の割合は一定ではない</h3><p>二次関数では、<i class="v">x</i> が <i class="v">x</i>₁ から <i class="v">x</i>₂ まで増えるときの変化の割合は <i class="v">a</i>(<i class="v">x</i>₁ + <i class="v">x</i>₂) + <i class="v">b</i> になり、場所によって変わる。「変化の割合」をオンにして、点 P を動かして確かめよう。</p>';
     return h;
   }
 
+  // ---------- なぜ？（関数 y = ax²） ----------
+  function explainPara(s) {
+    const a = s.a, f = (x) => a * x * x;
+    let h = '<h3>a の符号と大きさで形が決まる</h3><p>' + V('a') + ' &gt; 0 なら<b>上に開く</b>（∪）、' + V('a') + ' &lt; 0 なら<b>下に開く</b>（∩）。' + V('a') + ' の絶対値が大きいほど、開き方は小さく（細く）なる。グラフは原点を通り、' + V('y') + ' 軸について対称。</p>';
+    h += '<p class="now">今は ' + V('a') + ' = ' + fmt(a, 1) + '。' + (a > 0 ? '上に開いている。' : a < 0 ? '下に開いている。' : V('y') + ' = 0 になって、放物線ではなくなっている。') + '</p>';
+    h += '<h3>x が 2 倍・3 倍になると、y は 4 倍・9 倍</h3><p>' + V('y') + ' は ' + V('x') + ' の 2 乗に比例するので、' + V('x') + ' が ' + V('n') + ' 倍になると ' + V('y') + ' は ' + V('n') + '² 倍になる。</p>' +
+      '<p class="now">今の式では、' + V('x') + ' = 1 で ' + V('y') + ' = ' + nf(f(1)).html + '、' + V('x') + ' = 2 で ' + nf(f(2)).html + '、' + V('x') + ' = 3 で ' + nf(f(3)).html + '。</p>';
+    h += '<h3>変化の割合は一定ではない</h3><p>一次関数とちがって、場所によって変わる。' + V('x') + ' が ' + V('p') + ' から ' + V('q') + ' まで増えるときの変化の割合は ' + V('a') + '(' + V('p') + ' + ' + V('q') + ')。「変化の割合」をオンにして、点 P を動かして確かめよう。</p>';
+    const x1 = s.x0, x2 = s.x0 + s.dx;
+    h += '<p class="now">今は ' + V('x') + ' が ' + nf(x1).html + ' から ' + nf(x2).html + ' まで増えると、変化の割合は ' + nf(L.avgRate(f, x1, x2)).html + '。</p>';
+    h += '<h3>変域は「0 をふくむか」に注意</h3><p>' + V('x') + ' の変域に 0 が入っているとき、' + V('y') + ' の最小値（' + V('a') + ' &lt; 0 なら最大値）は 0 になる。両はしの値だけで決めないこと。「変域」をオンにして確かめよう。</p>';
+    const d = domain(s);
+    h += '<p class="now">今は ' + span(d.lo, V('x'), d.hi, true) + ' のとき ' + span(d.ymin, V('y'), d.ymax, true) + '。</p>';
+    return h;
+  }
+
   // ---------- 確認問題 ----------
+  function quizPara(s0) {
+    let a = s0.a, note = '';
+    if (a === 0) { a = 1; note = '<p class="hint">今は a = 0 なので、y = x² で出題するね。</p>'; }
+    const eq = quadEq(a, 0, 0), n = (v) => nf(L.tidy(v)).html;
+    const eqOf = (k) => quadEq(L.tidy(k), 0, 0);
+    const qs = [];
+    // 1. y の値
+    let m = U.mc(n(9 * a), [[n(6 * a), '3² は 3 × 2 ではなく 3 × 3 = 9。'], [n(3 * a), V('x') + ' を 2 乗するのを忘れている。'],
+      [n(-9 * a), '符号を確かめよう。3² = 9 は正の数。'], [n(a + 9), V('a') + ' と 3² はかけ算。'], [n(9 * a * a), '2 乗するのは ' + V('x') + ' だけ。']]);
+    qs.push(Object.assign(m, { q: note + '<p>' + eq + ' で、' + V('x') + ' = 3 のときの ' + V('y') + ' の値は？</p>',
+      explain: '<p>' + V('x') + ' = 3 を代入すると ' + V('y') + ' = ' + fmt(a, 1) + ' × 3² = ' + fmt(a, 1) + ' × 9 = ' + n(9 * a) + '。</p>' }));
+    // 2. 式を求める
+    m = U.mc(eq, [[eqOf(2 * a), V('y') + ' = ' + V('ax') + '² に ' + V('x') + ' = 2 を入れると 4' + V('a') + '。2 ではなく 2² = 4 で割る。'],
+      [eqOf(4 * a), V('y') + ' の値をそのまま ' + V('a') + ' にしている。' + V('x') + '² = 4 で割ろう。'],
+      [eqOf(a / 2), V('y') + ' = ' + V('ax') + '² に代入して ' + V('a') + ' を求め直そう。'],
+      [eqOf(-a), '符号を確かめよう。'], [eqOf(8 * a), 'かけるのではなく、' + V('x') + '² = 4 で割る。']]);
+    qs.push(Object.assign(m, { q: '<p>' + V('y') + ' は ' + V('x') + ' の 2 乗に比例し、' + V('x') + ' = 2 のとき ' + V('y') + ' = ' + n(4 * a) + '。' + V('y') + ' を ' + V('x') + ' の式で表すと？</p>',
+      explain: '<p>' + V('y') + ' = ' + V('ax') + '² に ' + V('x') + ' = 2、' + V('y') + ' = ' + n(4 * a) + ' を代入すると ' + n(4 * a) + ' = 4' + V('a') + '。だから ' + V('a') + ' = ' + n(a) + '。</p>' }));
+    // 3. 変化の割合
+    m = U.mc(n(4 * a), [[n(a), '一次関数とちがって、変化の割合は ' + V('a') + ' ではない。' + V('y') + ' の増加量 ÷ ' + V('x') + ' の増加量で求める。'],
+      [n(8 * a), 'それは ' + V('y') + ' の増加量。' + V('x') + ' の増加量 2 で割ろう。'],
+      [n(2 * a), V('y') + ' の増加量は 9' + V('a') + ' − ' + V('a') + ' = 8' + V('a') + '。これを 2 で割る。'],
+      [n(9 * a), 'それは ' + V('x') + ' = 3 のときの ' + V('y') + ' の値。'], [n(3 * a), V('a') + ' × (1 + 3) で求められる。']]);
+    qs.push(Object.assign(m, { q: '<p>' + eq + ' で、' + V('x') + ' の値が 1 から 3 まで増えるときの変化の割合は？</p>',
+      explain: '<p>' + V('y') + ' の増加量は ' + n(9 * a) + ' − ' + (a < 0 ? '(' + n(a) + ')' : n(a)) + ' = ' + n(8 * a) + '、' + V('x') + ' の増加量は 3 − 1 = 2。変化の割合 = ' + n(8 * a) + ' ÷ 2 = ' + n(4 * a) + '。（' + V('a') + ' × (1 + 3) でも求められる。）</p>' }));
+    // 4. 変域
+    const lo = Math.min(0, 4 * a), hi = Math.max(0, 4 * a), ry = (p, q) => span(L.tidy(Math.min(p, q)), V('y'), L.tidy(Math.max(p, q)), true);
+    m = U.mc(ry(lo, hi), [[ry(a, 4 * a), V('x') + ' の変域に 0 が入っている。' + V('x') + ' = 0 のとき ' + V('y') + ' = 0 で、これがいちばん' + (a > 0 ? '小さい' : '大きい') + '。'],
+      [ry(-a, 4 * a), V('x') + ' = −1 のとき ' + V('y') + ' = ' + n(a) + '（2 乗すると符号は変わらない）。それに 0 をふくむことにも注意。'],
+      [ry(0, a), V('x') + ' = 2 のときの ' + V('y') + ' = ' + n(4 * a) + ' のほうが、0 からはなれている。'],
+      [ry(-4 * a, 4 * a), V('y') + ' = ' + V('ax') + '² の ' + V('y') + ' は、0 をはさんで反対側にはいかない。']]);
+    qs.push(Object.assign(m, { q: '<p>' + eq + ' で、' + V('x') + ' の変域が −1 ≦ ' + V('x') + ' ≦ 2 のとき、' + V('y') + ' の変域は？</p>',
+      explain: '<p>' + V('x') + ' の変域に 0 が入っているので、' + V('y') + ' = 0（' + V('x') + ' = 0 のとき）が' + (a > 0 ? '最小' : '最大') + '。0 からいちばん遠い ' + V('x') + ' = 2 のとき ' + V('y') + ' = ' + n(4 * a) + ' が' + (a > 0 ? '最大' : '最小') + '。だから ' + ry(lo, hi) + '。「変域」をオンにして確かめよう。</p>' }));
+    // 5. a を変えると
+    m = U.mc('開き方が小さくなる（細くなる）', [['開き方が大きくなる（広がる）', V('a') + ' の絶対値が大きいほど、同じ ' + V('x') + ' でも ' + V('y') + ' が 0 から遠くなる＝細くなる。'],
+      ['上に平行移動する', V('y') + ' = ' + V('ax') + '² のグラフは、' + V('a') + ' を変えても原点を通る。'],
+      ['開く向きが逆になる', '向きが変わるのは ' + V('a') + ' の符号が変わるとき。']]);
+    qs.push(Object.assign(m, { q: '<p>' + eq + ' の ' + V('a') + ' を 2 倍にすると、グラフはどうなる？</p>',
+      explain: '<p>どの ' + V('x') + ' でも ' + V('y') + ' の値が 2 倍になるので、グラフは ' + V('y') + ' 軸に近づいて細くなる。' + V('a') + ' を動かして確かめよう。</p>' }));
+    return qs;
+  }
+
   function quizLin(s0) {
     let a = s0.a, b = s0.b, note = '';
     if (a === 0) { a = 2; note = '<p class="hint">今は a = 0 なので、a = 2 で出題するね。</p>'; }
@@ -328,7 +470,10 @@
     m = U.mc('(' + nf(xi).html + ', 0)', [['(' + nf(b / a).html + ', 0)', '<i class="v">ax</i> + <i class="v">b</i> = 0 を解くと <i class="v">x</i> = −<i class="v">b</i>/<i class="v">a</i>。符号に気をつけよう。'],
       ['(0, ' + fmt(b, 1) + ')', 'それは <i class="v">y</i> 軸との交点（切片）。<i class="v">x</i> 軸との交点は <i class="v">y</i> = 0 とおく。'],
       ['(' + nf(-a / (b || 1)).html + ', 0)', '<i class="v">a</i> と <i class="v">b</i> が逆になっている。'],
-      ['(' + nf(-b).html + ', 0)', '<i class="v">a</i> で割るのを忘れている。']]);
+      ['(' + nf(-b).html + ', 0)', '<i class="v">a</i> で割るのを忘れている。'],
+      ['(' + nf(xi + 1).html + ', 0)', '<i class="v">y</i> = 0 とおいて、<i class="v">x</i> を求め直そう。'],
+      ['(0, ' + fmt(a, 1) + ')', '<i class="v">a</i> は傾き。<i class="v">x</i> 軸との交点は <i class="v">y</i> = 0 とおいて求める。'],
+      ['(' + nf(xi - 1).html + ', 0)', '<i class="v">y</i> = 0 とおいて、<i class="v">x</i> を求め直そう。']]);
     qs.push(Object.assign(m, { q: '<p>' + eq + ' のグラフと <i class="v">x</i> 軸との交点は？</p>',
       explain: '<p><i class="v">y</i> = 0 とおくと ' + fmt(a, 1) + '<i class="v">x</i> ' + (b < 0 ? MINUS + ' ' + fmt(-b, 1) : '+ ' + fmt(b, 1)) + ' = 0 → <i class="v">x</i> = ' + nf(xi).html + '。</p>' }));
     // 3. b を変えると
@@ -336,7 +481,7 @@
       ['傾きが急になる', '傾きは <i class="v">a</i> で決まる。<i class="v">b</i> を変えても傾きは同じ。'],
       ['下に 2 だけ平行移動する', '<i class="v">b</i> が大きくなると、<i class="v">y</i> の値がどこでも 2 ずつ大きくなる＝上へ。']]);
     qs.push(Object.assign(m, { q: '<p>' + eq + ' の <i class="v">b</i> だけを 2 大きくすると、グラフはどうなる？</p>',
-      explain: '<p>どの <i class="v">x</i> でも <i class="v">y</i> の値が 2 ずつ大きくなるので、傾きはそのままで上に 2 平行移動する。「動かす」で <i class="v">b</i> を変えて確かめよう。</p>' }));
+      explain: '<p>どの <i class="v">x</i> でも <i class="v">y</i> の値が 2 ずつ大きくなるので、傾きはそのままで上に 2 平行移動する。<i class="v">b</i> を変えて確かめよう。</p>' }));
     // 4. 点を通るか
     const xp = Math.round(a) === a ? 2 : 1, yp = a * xp + b;
     m = U.mc('(' + xp + ', ' + nf(yp).html + ')', [['(' + xp + ', ' + nf(a * xp - b).html + ')', '<i class="v">b</i> の符号に気をつけて代入しよう。'],

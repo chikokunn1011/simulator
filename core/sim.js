@@ -159,7 +159,20 @@
       const num = el('input', 'num'); num.type = 'text'; num.inputMode = 'decimal'; num.id = id; num.autocomplete = 'off';
       num.setAttribute('aria-describedby', id + '-r');
       const unit = el('span', 'unit', p.unit || '');
-      const nw = el('span', 'num-wrap'); nw.append(num, unit);
+      // −・＋：スライダーでは合わせにくい細かい値を1きざみずつ動かす（スマホ向け。おしっぱなしで続けて動く）
+      const stepBtn = (sign) => {
+        const b = el('button', 'nudge', sign < 0 ? MINUS : '+'); b.type = 'button';
+        b.setAttribute('aria-label', lab.textContent + ' を ' + fmt(p.step, p.digits) + (sign < 0 ? ' へらす' : ' ふやす'));
+        const go = () => setValue(p.key, clamp(round(S[p.key] + sign * p.step, p.step), p.min, p.max));
+        let t1 = 0, t2 = 0;
+        const stop = () => { clearTimeout(t1); clearInterval(t2); };
+        b.addEventListener('pointerdown', (e) => { if (e.button) return; stop(); t1 = setTimeout(() => { t2 = setInterval(go, 90); }, 420); });
+        ['pointerup', 'pointerleave', 'pointercancel', 'blur'].forEach((ev) => b.addEventListener(ev, stop));
+        b.addEventListener('click', go);
+        b.addEventListener('contextmenu', (e) => e.preventDefault());
+        return b;
+      };
+      const nw = el('span', 'num-wrap'); nw.append(stepBtn(-1), num, unit, stepBtn(1));
       const rng = el('input', 'slider'); rng.type = 'range'; rng.min = p.min; rng.max = p.max; rng.step = p.step;
       rng.setAttribute('aria-label', lab.textContent);
       const rangeNote = el('span', 'sr'); rangeNote.id = id + '-r';
