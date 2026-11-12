@@ -23,6 +23,7 @@
 | `tools/shot.js` | 画面写真を撮る（Playwright） |
 | `tools/qa.js` | 教材を自動で操作して確かめる（`node tools/qa.js parabola`） |
 | `tools/drag-test.js` | 関数の教材で、指・マウスで点を動かせるかを確かめる |
+| `tools/drag-geo.js` | 円周角・三平方の教材で、指・マウスで点を動かせるか・点の上だけスクロールを止めるかを確かめる |
 
 ## 教材の足し方
 

@@ -1,7 +1,7 @@
 /* sim.html?s=<id> で、その教材の計算（lib/<id>.js）と画面（sims/<id>.js）を読みこむ */
 (function () {
   'use strict';
-  var V = '202611111700';   // 教材のファイルを直したらここも上げる（スマホに保存された古い版を入れかえるため）
+  var V = '202611121400';   // 教材のファイルを直したらここも上げる（スマホに保存された古い版を入れかえるため）
   // 見た目（ほかのサイトと共通の ew:style）
   var pick = document.getElementById('style');
   if (pick) {

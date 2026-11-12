@@ -119,6 +119,10 @@
         return sv(ax + '<path d="M86 6 Q150 142 214 6" fill="none" stroke="var(--c1)" stroke-width="4"/><path d="M40 6 Q150 142 260 6" fill="none" stroke="var(--c2)" stroke-width="3" stroke-dasharray="8 6"/><circle cx="150" cy="74" r="6" fill="var(--c1)"/>');
       case 'quadratic':
         return sv(ax + '<path d="M96 4 Q170 170 244 4" fill="none" stroke="var(--c1)" stroke-width="4"/><path d="M170 10V100" stroke="var(--c2)" stroke-width="2.5" stroke-dasharray="7 5"/><circle cx="170" cy="87" r="6" fill="var(--c2)"/>');
+      case 'inscribed-angle':
+        return sv('<circle cx="150" cy="54" r="44" fill="none" stroke="var(--ink)" stroke-width="2.5"/><path d="M118 84 L150 54 L182 84" fill="none" stroke="var(--c3)" stroke-width="3"/><path d="M118 84 L136 12.3 L182 84" fill="none" stroke="var(--c1)" stroke-width="3.5"/><path d="M118 84 A44 44 0 0 0 182 84" fill="none" stroke="var(--c2)" stroke-width="5"/><circle cx="136" cy="12.3" r="6" fill="var(--c1)"/><circle cx="150" cy="54" r="3.5" fill="var(--ink)"/>');
+      case 'pythagoras':
+        return sv('<path d="M120 70 H168 V34 Z" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round"/><rect x="120" y="70" width="48" height="48" fill="var(--c1)" opacity=".35"/><rect x="168" y="34" width="36" height="36" fill="var(--c3)" opacity=".35"/><path d="M120 70 L168 34 L132 -14 L84 22 Z" fill="var(--c2)" opacity=".35"/><path d="M120 70 L168 34 L132 -14 L84 22 Z" fill="none" stroke="var(--c2)" stroke-width="2"/>');
       case 'trig': {
         let d = 'M150 54'; for (let i = 0; i <= 120; i++) { const x = 150 + i, y = 54 - 32 * Math.sin(i / 120 * Math.PI * 2); d += ' L' + x + ' ' + y.toFixed(1); }
         return sv('<circle cx="80" cy="54" r="32" fill="none" stroke="var(--muted)" stroke-width="2"/><path d="M40 54H280M80 14V94" stroke="var(--muted)" stroke-width="1.2" opacity=".6"/><path d="M80 54 L102.6 31.4" stroke="var(--c1)" stroke-width="3"/><circle cx="102.6" cy="31.4" r="6" fill="var(--c2)"/><path d="M102.6 31.4H150" stroke="var(--c2)" stroke-dasharray="4 4" stroke-width="2"/><path d="' + d + '" fill="none" stroke="var(--c2)" stroke-width="3.5"/>');
